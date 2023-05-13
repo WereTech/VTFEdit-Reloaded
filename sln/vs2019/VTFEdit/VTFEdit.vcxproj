@@ -14,6 +14,7 @@
     <ProjectGuid>{C0718102-155C-439F-843E-526CAF26B117}</ProjectGuid>
     <RootNamespace>VTFEdit</RootNamespace>
     <Keyword>ManagedCProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -49,7 +50,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\Build</OutDir>
+    <OutDir>..\Build\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -79,8 +80,8 @@
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)VTFLib\$(Platform)\$(Configuration)\VTFLib.dll" "$(TargetDir)"
 copy "$(SolutionDir)VTFLib\$(Platform)\$(Configuration)\VTFLib.pdb" "$(TargetDir)"
-copy "$(SolutionDir)..\..\thirdparty\DevIL.dll" "$(TargetDir)"
-copy "$(SolutionDir)..\..\bin\x64\HLLib.dll" "$(TargetDir)"
+copy "$(SolutionDir)..\..\thirdparty\bin\DevIL.dll" "$(TargetDir)"
+copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
 
 </Command>
     </PostBuildEvent>
@@ -113,7 +114,7 @@ copy "$(SolutionDir)..\..\bin\x64\HLLib.dll" "$(TargetDir)"
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)VTFLib\$(Platform)\$(Configuration)\VTFLib.dll" "$(TargetDir)"
 copy "$(SolutionDir)..\..\thirdparty\bin\DevIL.dll" "$(TargetDir)"
-copy "$(SolutionDir)..\..\bin\x64\HLLib.dll" "$(TargetDir)"
+copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

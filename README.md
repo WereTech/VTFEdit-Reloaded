@@ -31,19 +31,19 @@ included.
 Visual Studio 2019 or Visual Studio 2022
 
 "Desktop development with C++" workload
-
-HLLib.dll from this zip, extract from /hllib246.zip/bin/x64/ [>>Link](https://web.archive.org/web/20171114194253/http://nemesis.thewavelength.net/files/files/hllib246.zip) 
-
-DevIL.dll from this zip [>>Link](https://sourceforge.net/projects/openil/files/DevIL%20Win32%20and%20Win64/DevIL-EndUser-x64-1.8.0.zip/download?use_mirror=phoenixnap)
 #
 
-Open the solution in /VTFEdit-Reloaded/sln/ with Visual Studio 2019 or 2022. Set the build from Debug to Release, then right-click on VTFEdit in the Solution Explorer and click Set as startup project, then right-click VTFEdit again and click Build. You *might* get a Build Failed message in the bottom-left after completion, but it means nothing in the context of the build actually succeeding, it can be ignored.
+Open the solution in /VTFEdit-Reloaded/sln/ with Visual Studio 2019 or 2022. Set the build from Debug to Release, then right-click on VTFEdit in the Solution Explorer and click Set as startup project, then right-click VTFEdit again and click Build.
 
 After the Build is finished, the executable will be in /VTFEdit-Reloaded/sln/vs2019/Build/
 
-Move the executable and VTFLib.dll to any folder you want VTFEdit-Reloaded to be in, it does not matter.
+Move the executable and all dll files to any folder you want VTFEdit-Reloaded to be in, it does not matter.
 
-Move the other dlls you downloaded from the Prerequisites and put them into the same folder as where you put VTFEdit-Reloaded.
+#
+HLLib can be obtained from here, with the dll and the source code if you want to build it yourself. [>>Link](https://web.archive.org/web/20171114194253/http://nemesis.thewavelength.net/files/files/hllib246.zip) 
+
+DevIL.dll from this zip (This may be changed if the project has a working 32 bit compile) [>>Link](https://sourceforge.net/projects/openil/files/DevIL%20Win32%20and%20Win64/DevIL-EndUser-x64-1.8.0.zip/download?use_mirror=phoenixnap)
+#
 
 ## VTFCmd Usage
 
@@ -88,6 +88,18 @@ vtfcmd.exe -folder "C:\output\*.vtf" -output "C:\input" -exportformat "jpg"
 ```
 
 ## VTFEdit Reloaded Changelog
+
+  v2.0.4
+  - Changed the UI to use a better version of the tool bar and added more buttons for ease of access.
+  - Adjusted several UI elements to stop text wrapping, causing the rest of the text to not be visible at all.
+  - Adjusted some windows to now use a minimum window size, as this was not set before and you were able to resize these windows to be extremely small which also hid controls.
+  - Added a Close option to both the File dropdown, and the new tool bar. The shortcut for this is Ctrl + Q. This will close the current file, which has a confirmation prompt so you don't close your file accidentally.
+  - Changed the right-click context menu for VTFs to additionally show when clicking within the image window instead of needing to right-click on the image itself.
+  - Changed the functionality of the Frame, Face, Slice, and Mipmap numeric bars to only be interactable if any of these properties have more than one to them. (in this case 0 = 1 because C++ starts at 0)
+  - Removed the Alpha flags from the flags checkbox list, as they are set on import and cannot be changed manually.
+	- Instead the alpha property has been turned into a label in the image tab with the text saying what its alpha is, for example "Eight Bit Alpha".
+  - Removed the Unused flags from the checkbox list, as they are internal to VTEX only and is not needed to be defined as a VTF flag.
+  - Adjusted some VTF flag names.
 
   v2.0.3
   - Updated the Shaders and Surface Properties list in VMT Create in accordance to the Valve Developer Wiki's current list
