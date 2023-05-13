@@ -43,7 +43,7 @@ extern "C" {
 // VTF version numbers (current version is 7.5)
 //---------------------------------------------
 #define VTF_MAJOR_VERSION					7		//!< VTF major version number
-#define VTF_MINOR_VERSION					5		//!< VTF minor version number
+#define VTF_MINOR_VERSION					6		//!< VTF minor version number
 #define VTF_MINOR_VERSION_DEFAULT			3
 
 #define VTF_MINOR_VERSION_MIN_SPHERE_MAP	1
@@ -89,15 +89,13 @@ typedef enum tagVTFImageFormat
 	IMAGE_FORMAT_R32F,						//!<  = Luminance - 32 bpp
 	IMAGE_FORMAT_RGB323232F,				//!<  = Red, Green, Blue - 96 bpp
 	IMAGE_FORMAT_RGBA32323232F,				//!<  = Red, Green, Blue, Alpha - 128 bpp
-	IMAGE_FORMAT_NV_DST16,
-	IMAGE_FORMAT_NV_DST24,					
-	IMAGE_FORMAT_NV_INTZ,
-	IMAGE_FORMAT_NV_RAWZ,
-	IMAGE_FORMAT_ATI_DST16,
-	IMAGE_FORMAT_ATI_DST24,
-	IMAGE_FORMAT_NV_NULL,
-	IMAGE_FORMAT_ATI2N,						
-	IMAGE_FORMAT_ATI1N,
+
+	IMAGE_FORMAT_NV_NULL = 33,				//!<  = 0 bpp
+
+	IMAGE_FORMAT_ATI2N,						//!<  = Red, Green BC5 compressed format - 8 bpp
+	IMAGE_FORMAT_ATI1N,						//!<  = Red BC4 compressed format - 4 bpp
+
+	IMAGE_FORMAT_BC7 = 70,					//!<  = Red, Green, Blue, Alpha BC7 compressed format - 8 bpp
 	/*
 	XBox:
 	IMAGE_FORMAT_X360_DST16,
@@ -286,6 +284,7 @@ typedef enum tagVTFResourceEntryType
 	VTF_RSRC_TEXTURE_LOD_SETTINGS = MAKE_VTF_RSRC_IDF('L', 'O', 'D', RSRCF_HAS_NO_DATA_CHUNK),
 	VTF_RSRC_TEXTURE_SETTINGS_EX = MAKE_VTF_RSRC_IDF('T', 'S', 'O', RSRCF_HAS_NO_DATA_CHUNK),
 	VTF_RSRC_KEY_VALUE_DATA = MAKE_VTF_RSRC_ID('K', 'V', 'D'),
+	VTF_RSRC_AUX_COMPRESSION_INFO = MAKE_VTF_RSRC_ID('A', 'X', 'C'),
 	VTF_RSRC_MAX_DICTIONARY_ENTRIES = 32
 } VTFResourceEntryType;
 
@@ -301,7 +300,7 @@ struct SVTFFileHeader
 {
 	vlChar			TypeString[4];					//!< "Magic number" identifier- "VTF\0".
 	vlUInt			Version[2];						//!< Version[0].version[1] (currently 7.2)
-	vlUInt			HeaderSize;						//!< Size of the header struct (currently 80 bytes)				
+	vlUInt			HeaderSize;						//!< Size of the header struct (currently 120 bytes)				
 };
 
 //! VTFHeader_70 struct.
@@ -332,7 +331,7 @@ struct SVTFHeader_70 : public SVTFFileHeader
 
 	The complete header for v7.0 of the VTF file format aligned to 16 bytes.
 */
-__declspec(align(16)) struct SVTFHeader_70_A : public SVTFHeader_70 {};
+struct alignas(16) SVTFHeader_70_A : public SVTFHeader_70 {};
 
 //! VTFHeader_71 struct.
 /*!
@@ -349,7 +348,7 @@ struct SVTFHeader_71 : public SVTFHeader_70
 
 	The complete header for v7.1 of the VTF file format aligned to 16 bytes.
 */
-__declspec(align(16)) struct SVTFHeader_71_A : public SVTFHeader_71 {};
+struct alignas(16) SVTFHeader_71_A : public SVTFHeader_71 {};
 
 //! VTFHeader_72 struct.
 /*!
@@ -366,7 +365,7 @@ struct SVTFHeader_72 : public SVTFHeader_71
 
 	The complete header for v7.2 of the VTF file format aligned to 16 bytes.
 */
-__declspec(align(16)) struct SVTFHeader_72_A : public SVTFHeader_72 {};
+struct alignas(16) SVTFHeader_72_A : public SVTFHeader_72 {};
 
 //! VTFHeader_73 struct.
 /*!
@@ -384,7 +383,7 @@ struct SVTFHeader_73 : public SVTFHeader_72
 
 	The complete header for v7.3 of the VTF file format aligned to 16 bytes.
 */
-__declspec(align(16)) struct SVTFHeader_73_A : public SVTFHeader_73 {};
+struct alignas(16) SVTFHeader_73_A : public SVTFHeader_73 {};
 
 //! VTFHeader_74 struct.
 /*!
@@ -401,7 +400,7 @@ struct SVTFHeader_74 : public SVTFHeader_73
 
 	The complete header for v7.4 of the VTF file format aligned to 16 bytes.
 */
-__declspec(align(16)) struct SVTFHeader_74_A : public SVTFHeader_74 {};
+struct alignas(16) SVTFHeader_74_A : public SVTFHeader_74 {};
 
 //! VTFHeader_75 struct.
 /*!
@@ -418,7 +417,21 @@ struct SVTFHeader_75 : public SVTFHeader_74
 
 	The complete header for v7.5 of the VTF file format aligned to 16 bytes.
 */
-__declspec(align(16)) struct SVTFHeader_75_A : public SVTFHeader_75 {};
+struct alignas(16) SVTFHeader_75_A : public SVTFHeader_75 {};
+
+//! VTFHeader_76 struct.
+/*!
+
+	The complete header for v7.6 of the VTF file format.
+*/
+struct SVTFHeader_76 : public SVTFHeader_75 {};
+
+//! VTFHeader_76_A struct.
+/*!
+
+	The complete header for v7.6 of the VTF file format aligned to 16 bytes.
+*/
+struct alignas(16) SVTFHeader_76_A : public SVTFHeader_76 {};
 
 struct SVTFResource
 {
@@ -454,6 +467,18 @@ typedef struct tagSVTFTextureSettingsExResource
 	vlByte Flags2;
 	vlByte Flags3;
 } SVTFTextureSettingsExResource;
+
+typedef struct tagSVTFAuxCompressionInfoHeader
+{
+	static constexpr vlInt32 DEFAULT_COMPRESSION = -1;
+
+	vlInt32 CompressionLevel;	// -1 = default, 0 = no compression, 1-9 = specific compression from lowest to highest
+} SVTFAuxCompressionInfoHeader;
+
+typedef struct tagSVTFAuxCompressionInfoEntry
+{
+	vlUInt32 CompressedSize; // Size of compressed face image data
+} SVTFAuxCompressionInfoEntry;
 
 struct SVTFHeader : public SVTFHeader_74_A
 {

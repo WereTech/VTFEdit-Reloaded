@@ -16,11 +16,16 @@
 #include "VTFMathlib.h"
 
 #include "Compressonator.h"
+#include "../thirdparty/miniz/miniz.h"
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 
 using namespace VTFLib;
+
+// Conflicts with STL
+#undef min
+#undef max
 
 // Class construction
 // ------------------
@@ -183,6 +188,26 @@ CVTFFile::~CVTFFile()
 //
 vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt uiFaces, vlUInt uiSlices, VTFImageFormat ImageFormat, vlBool bThumbnail, vlBool bMipmaps, vlBool bNullImageData)
 {
+	return this->Init(uiWidth, uiHeight, uiFrames, uiFaces, uiSlices, ImageFormat, bThumbnail, bMipmaps ? -1 : 1, bNullImageData);
+}
+
+//
+// Init()
+// Helper with struct as param instead
+//
+vlBool CVTFFile::Init(const SVTFInitOptions& o)
+{
+	return this->Init(o.uiWidth, o.uiHeight, o.uiFrames, o.uiFaces, o.uiSlices, o.ImageFormat, o.bThumbnail, o.nMipMaps, o.bNullImageData);
+}
+
+//
+// Init()
+// Creates a VTF file of the specified format and size.  Image data and other
+// options must be set after creation.  Essential format flags are automatically
+// generated.
+//
+vlBool CVTFFile::Init(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt uiFaces, vlUInt uiSlices, VTFImageFormat ImageFormat, vlBool bThumbnail, vlInt nMipmaps, vlBool bNullImageData)
+{
 	this->Destroy();
 
 	//
@@ -280,6 +305,11 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 
 	this->Header = new SVTFHeader;
 	memset(this->Header, 0, sizeof(SVTFHeader));
+	
+	// Compute mipmap count if requested by user
+	if (nMipmaps < 0)
+		nMipmaps = this->ComputeMipmapCount(uiWidth, uiHeight, uiSlices);
+	nMipmaps = nMipmaps < 0 ? 1 : nMipmaps; // Make sure at least 1
 
 	strcpy(this->Header->TypeString, "VTF");
 	this->Header->Version[0] = VTF_MAJOR_VERSION;
@@ -290,7 +320,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 	this->Header->Flags = (this->GetImageFormatInfo(ImageFormat).uiAlphaBitsPerPixel == 1 ? TEXTUREFLAGS_ONEBITALPHA : 0)
 							| (this->GetImageFormatInfo(ImageFormat).uiAlphaBitsPerPixel > 1 ? TEXTUREFLAGS_EIGHTBITALPHA : 0)
 							| (uiFaces == 1 ? 0 : TEXTUREFLAGS_ENVMAP)
-							| (bMipmaps ? 0 : TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD);
+							| (nMipmaps > 1 ? 0 : TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD);
 	this->Header->Frames = (vlShort)uiFrames;
 	this->Header->StartFrame = uiFaces != 6 || VTF_MINOR_VERSION_DEFAULT >= VTF_MINOR_VERSION_MIN_NO_SPHERE_MAP ? 0 : 0xffff;
 	this->Header->Reflectivity[0] = 1.0f;
@@ -298,7 +328,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 	this->Header->Reflectivity[2] = 1.0f;
 	this->Header->BumpScale = 1.0f;
 	this->Header->ImageFormat = ImageFormat;
-	this->Header->MipCount = bMipmaps ? (vlByte)this->ComputeMipmapCount(uiWidth, uiHeight, uiSlices) : 1;
+	this->Header->MipCount = nMipmaps;
 	this->Header->Depth = (vlShort)uiSlices;
 	this->Header->ResourceCount = 0;
 
@@ -409,6 +439,8 @@ static CMP_FORMAT GetCMPFormat( VTFImageFormat imageFormat, bool bDXT5GA )
 	case IMAGE_FORMAT_ATI1N:			return CMP_FORMAT_ATI1N;
 	// Swizzle is technically wrong for below but we reverse it in the shader!
 	case IMAGE_FORMAT_ATI2N:			return CMP_FORMAT_ATI2N;
+
+	case IMAGE_FORMAT_BC7:				return CMP_FORMAT_BC7;
 
 	default:							return CMP_FORMAT_Unknown;
 	}
@@ -608,7 +640,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 		}
 
 		// Create image (allocate and setup structures).
-		if(!this->Create(uiWidth, uiHeight, uiFrames, uiFaces + (VTFCreateOptions.bSphereMap && uiFaces == 6 ? 1 : 0), uiSlices, VTFCreateOptions.ImageFormat, VTFCreateOptions.bThumbnail, VTFCreateOptions.bMipmaps, vlFalse))
+		if(!this->Init(uiWidth, uiHeight, uiFrames, uiFaces + (VTFCreateOptions.bSphereMap && uiFaces == 6 ? 1 : 0), uiSlices, VTFCreateOptions.ImageFormat, VTFCreateOptions.bThumbnail, VTFCreateOptions.bMipmaps ? -1 : 1, vlFalse))
 		{
 			throw 0;
 		}
@@ -654,8 +686,8 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 
 						for (vlUInt m = 1; m < this->Header->MipCount; m++)
 						{
-							vlUShort usWidth  = max(1u, this->Header->Width  >> m);
-							vlUShort usHeight = max(1u, this->Header->Height >> m);
+							vlUShort usWidth  = std::max(1, this->Header->Width  >> m);
+							vlUShort usHeight = std::max(1, this->Header->Height >> m);
 
 							if (!stbir_resize_uint8_generic(
 								pSource, this->Header->Width, this->Header->Height, 0,
@@ -837,22 +869,26 @@ vlBool CVTFFile::IsLoaded() const
 
 vlBool CVTFFile::Load(const vlChar *cFileName, vlBool bHeaderOnly)
 {
-	return this->Load(&IO::Readers::CFileReader(cFileName), bHeaderOnly);
+	IO::Readers::CFileReader reader(cFileName);
+	return this->Load(&reader, bHeaderOnly);
 }
 
 vlBool CVTFFile::Load(const vlVoid *lpData, vlUInt uiBufferSize, vlBool bHeaderOnly)
 {
-	return this->Load(&IO::Readers::CMemoryReader(lpData, uiBufferSize), bHeaderOnly);
+	IO::Readers::CMemoryReader reader(lpData, uiBufferSize);
+	return this->Load(&reader, bHeaderOnly);
 }
 
 vlBool CVTFFile::Load(vlVoid *pUserData, vlBool bHeaderOnly)
 {
-	return this->Load(&IO::Readers::CProcReader(pUserData), bHeaderOnly);
+	IO::Readers::CProcReader reader(pUserData);
+	return this->Load(&reader, bHeaderOnly);
 }
 
 vlBool CVTFFile::Save(const vlChar *cFileName) const
 {
-	return this->Save(&IO::Writers::CFileWriter(cFileName));
+	IO::Writers::CFileWriter writer(cFileName);
+	return this->Save(&writer);
 }
 
 vlBool CVTFFile::Save(vlVoid *lpData, vlUInt uiBufferSize, vlUInt &uiSize) const
@@ -870,7 +906,8 @@ vlBool CVTFFile::Save(vlVoid *lpData, vlUInt uiBufferSize, vlUInt &uiSize) const
 
 vlBool CVTFFile::Save(vlVoid *pUserData) const
 {
-	return this->Save(&IO::Writers::CProcWriter(pUserData));
+	IO::Writers::CProcWriter writer(pUserData);
+	return this->Save(&writer);
 }
 
 // -----------------------------------------------------------------------------------
@@ -926,7 +963,7 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 			throw 0;
 		}
 
-		Reader->Seek(0, FILE_BEGIN);
+		Reader->Seek(0, SEEK_SET);
 
 		this->Header = new SVTFHeader;
 		memset(this->Header, 0, sizeof(SVTFHeader));
@@ -969,7 +1006,9 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 		}
 
 		// read the resource directory if version > 7.3
-		vlUInt uiThumbnailBufferOffset = 0, uiImageDataOffset = 0;
+		vlUInt uiThumbnailBufferOffset = 0, uiImageDataOffset = 0, uiRealImageSize = this->uiImageBufferSize;
+		vlBool bHasAuxCompression = false;
+		vlByte* lpCompressionInfo = 0;
 		if(this->Header->ResourceCount)
 		{
 			if(this->Header->ResourceCount > VTF_RSRC_MAX_DICTIONARY_ENTRIES)
@@ -1003,17 +1042,72 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 					}
 					uiImageDataOffset = this->Header->Resources[i].Data;
 					break;
+				case VTF_RSRC_AUX_COMPRESSION_INFO: // If no data chunk, compression = 0 and so we don't need to deal with this case specially.
+				{
+					if (this->Header->Resources[i].Data + sizeof(vlUInt) > uiFileSize)
+					{
+						LastError.Set("File may be corrupt; file too small for its resource data.");
+					}
+
+					vlUInt uiSize = 0;
+					Reader->Seek(this->Header->Resources[i].Data, SEEK_SET);
+					if (Reader->Read(&uiSize, sizeof(vlUInt)) != sizeof(vlUInt)) 
+					{
+						LastError.Set("File may be corrupt; file too small for its resource data.");
+						throw 0;
+					}
+
+					if (this->Header->Resources[i].Data + sizeof(vlUInt) + uiSize > uiFileSize)
+					{
+						LastError.Set("File may be corrupt; file too small for its resource data.");
+						throw 0;
+					}
+
+					this->Header->Data[i].Size = uiSize;
+					lpCompressionInfo = this->Header->Data[i].Data = new vlByte[uiSize];
+					if (Reader->Read(lpCompressionInfo, uiSize) != uiSize)
+					{
+						throw 0;
+					}
+
+					if (uiSize > sizeof(SVTFAuxCompressionInfoHeader)) 
+					{
+						vlUInt32 CompressionLevel = ((SVTFAuxCompressionInfoHeader*)lpCompressionInfo)->CompressionLevel;
+						bHasAuxCompression = CompressionLevel != 0;
+					}
+
+					if (!bHasAuxCompression)
+						break;
+
+					uiRealImageSize = 0;
+
+					for (vlInt iMip = this->Header->MipCount - 1; iMip >= 0; --iMip)
+					{
+						for (vlUInt uiFrame = 0; uiFrame < this->Header->Frames; ++uiFrame)
+						{
+							for (vlUInt uiFace = 0; uiFace < GetFaceCount(); ++uiFace)
+							{
+								vlUInt infoOffset = GetAuxInfoOffset(uiFrame, uiFace, iMip);
+
+								SVTFAuxCompressionInfoEntry* infoEntry = (SVTFAuxCompressionInfoEntry*)(lpCompressionInfo + infoOffset);
+
+								uiRealImageSize += infoEntry->CompressedSize;
+							}
+						}
+					}
+					break;
+				}
 				default:
 					if((this->Header->Resources[i].Flags & RSRCF_HAS_NO_DATA_CHUNK) == 0)
 					{
 						if(this->Header->Resources[i].Data + sizeof(vlUInt) > uiFileSize)
 						{
-							LastError.Set("File may be corrupt; file to small for it's resource data.");
+							LastError.Set("File may be corrupt; file too small for its resource data.");
 							throw 0;
 						}
 
 						vlUInt uiSize = 0;
-						Reader->Seek(this->Header->Resources[i].Data, FILE_BEGIN);
+						Reader->Seek(this->Header->Resources[i].Data, SEEK_SET);
 						if(Reader->Read(&uiSize, sizeof(vlUInt)) != sizeof(vlUInt))
 						{
 							throw 0;
@@ -1021,7 +1115,7 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 
 						if(this->Header->Resources[i].Data + sizeof(vlUInt) + uiSize > uiFileSize)
 						{
-							LastError.Set("File may be corrupt; file to small for it's resource data.");
+							LastError.Set("File may be corrupt; file too small for its resource data.");
 							throw 0;
 						}
 
@@ -1044,9 +1138,9 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 		
 		// sanity check
 		// headersize + lowbuffersize + buffersize *should* equal the filesize
-		if(this->Header->HeaderSize > uiFileSize || uiThumbnailBufferOffset + this->uiThumbnailBufferSize > uiFileSize || uiImageDataOffset + this->uiImageBufferSize > uiFileSize)
+		if(this->Header->HeaderSize > uiFileSize || uiThumbnailBufferOffset + this->uiThumbnailBufferSize > uiFileSize || uiImageDataOffset + uiRealImageSize > uiFileSize)
 		{
-			LastError.Set("File may be corrupt; file to small for it's image data.");
+			LastError.Set("File may be corrupt; file too small for its image data.");
 			throw 0;
 		}
 
@@ -1061,7 +1155,7 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 			this->lpThumbnailImageData = new vlByte[this->uiThumbnailBufferSize];
 
 			// load the low res data
-			Reader->Seek(uiThumbnailBufferOffset, FILE_BEGIN);
+			Reader->Seek(uiThumbnailBufferOffset, SEEK_SET);
 			if(Reader->Read(this->lpThumbnailImageData, this->uiThumbnailBufferSize) != this->uiThumbnailBufferSize)
 			{
 				throw 0;
@@ -1077,9 +1171,74 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 		{
 			this->lpImageData = new vlByte[this->uiImageBufferSize];
 
-			// load the high-res data
-			Reader->Seek(uiImageDataOffset, FILE_BEGIN);
-			if(Reader->Read(this->lpImageData, this->uiImageBufferSize) != this->uiImageBufferSize)
+			Reader->Seek(uiImageDataOffset, SEEK_SET);
+
+			// Load the compressed image
+			if (bHasAuxCompression)
+			{
+				// Prepare decompression stream
+				z_stream zStream = { 0 };
+				if (bHasAuxCompression && (inflateInit(&zStream) != Z_OK))
+				{
+					LastError.Set("Unable to initialise VTF decompression stream!\n");
+					throw 0;
+				}
+
+				vlByte* lpCompressionBuf = new vlByte[uiRealImageSize];
+				if (Reader->Read(lpCompressionBuf, uiRealImageSize) != uiRealImageSize)
+				{
+					LastError.Set("Unable to read compressed VTF!\n");
+					inflateEnd(&zStream);
+					throw 0;
+				}
+
+				vlInt totalRead = 0;
+
+				for (vlInt iMip = this->Header->MipCount - 1; iMip >= 0; --iMip)
+				{
+					vlInt iMipSize = ComputeMipmapSize(this->Header->Width, this->Header->Height, 1, iMip, this->Header->ImageFormat);
+
+					for (vlUInt uiFrame = 0; uiFrame < this->Header->Frames; ++uiFrame)
+					{
+						for (vlUInt uiFace = 0; uiFace < GetFaceCount(); ++uiFace)
+						{
+							vlByte *lpMipBits = GetData(uiFrame, uiFace, 0, iMip);
+
+							vlUInt uiInfoOffset = GetAuxInfoOffset(uiFrame, uiFace, iMip);
+
+							SVTFAuxCompressionInfoEntry* pInfoEntry = (SVTFAuxCompressionInfoEntry*)(lpCompressionInfo + uiInfoOffset);
+
+							// Decompress
+							zStream.next_in = lpCompressionBuf + totalRead;
+							zStream.avail_in = pInfoEntry->CompressedSize;
+							zStream.total_out = 0;
+
+							while (zStream.avail_in)
+							{
+								zStream.next_out = lpMipBits + zStream.total_out;
+								zStream.avail_out = iMipSize - zStream.total_out;
+
+								vlInt zRet = inflate(&zStream, Z_NO_FLUSH);
+								vlBool zFailure = (zRet != Z_OK) && (zRet != Z_STREAM_END);
+								if (zFailure || ((zRet == Z_STREAM_END) && (zStream.total_out != iMipSize)))
+								{
+									LastError.Set("Unable to decompress VTF!\n");
+									inflateEnd(&zStream);
+									throw 0;
+								}
+							}
+
+							inflateReset(&zStream);
+
+							totalRead += pInfoEntry->CompressedSize;
+						}
+					}
+				}
+
+				delete[] lpCompressionBuf;
+				inflateEnd(&zStream);
+			}
+			else if (Reader->Read(this->lpImageData, this->uiImageBufferSize) != this->uiImageBufferSize) // load the high-res data
 			{
 				throw 0;
 			}
@@ -1104,7 +1263,7 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 
 //
 // Save()
-// Saves the curret image.  Basic format checking is done.
+// Saves the current image.  Basic format checking is done.
 //
 vlBool CVTFFile::Save(IO::Writers::IWriter *Writer) const
 {
@@ -1112,6 +1271,13 @@ vlBool CVTFFile::Save(IO::Writers::IWriter *Writer) const
 	{
 		LastError.Set("No image to save.");
 		return vlFalse;
+	}
+
+	// Check for aux compression in case we should use the compressed path
+	vlInt iCompressionLevel = GetAuxCompressionLevel();
+	if (iCompressionLevel != 0)
+	{
+		return SaveCompressed(Writer, iCompressionLevel);
 	}
 
 	// ToDo: Check if the image buffer is ok.
@@ -1130,6 +1296,7 @@ vlBool CVTFFile::Save(IO::Writers::IWriter *Writer) const
 
 		if(this->GetSupportsResources())
 		{
+
 			for(vlUInt i = 0; i < this->Header->ResourceCount; i++)
 			{
 				switch(this->Header->Resources[i].Type)
@@ -1141,11 +1308,13 @@ vlBool CVTFFile::Save(IO::Writers::IWriter *Writer) const
 					}
 					break;
 				case VTF_LEGACY_RSRC_IMAGE:
-					if(Writer->Write(this->lpImageData, this->uiImageBufferSize) != this->uiImageBufferSize)
+				{
+					if (Writer->Write(this->lpImageData, this->uiImageBufferSize) != this->uiImageBufferSize)
 					{
 						throw 0;
 					}
 					break;
+				}
 				default:
 					if((this->Header->Resources[i].Flags & RSRCF_HAS_NO_DATA_CHUNK) == 0)
 					{
@@ -1196,6 +1365,206 @@ vlBool CVTFFile::Save(IO::Writers::IWriter *Writer) const
 }
 
 //
+// SaveCompressed()
+// Saves the current image with a certain compression level.  Basic format checking is done.
+//
+vlBool CVTFFile::SaveCompressed(IO::Writers::IWriter* Writer, vlInt iCompressionLevel) const
+{
+	if (!this->IsLoaded() || !this->GetHasImage())
+	{
+		LastError.Set("No image to save.");
+		return vlFalse;
+	}
+
+	if (this->GetMajorVersion() < 7 || (this->GetMajorVersion() == 7 && this->GetMinorVersion() < 6))
+	{
+		LastError.Set("VTF Version <7.6 does not support auxiliary compression.");
+		return vlFalse;
+	}
+
+	if (iCompressionLevel <= 0 && iCompressionLevel != SVTFAuxCompressionInfoHeader::DEFAULT_COMPRESSION)
+	{
+		LastError.Set("Invalid compression level while saving.");
+		return vlFalse;
+	}
+
+	// Initialise new compression info
+	vlULong ulCompressionInfoSize = sizeof(SVTFAuxCompressionInfoHeader)
+		+ (this->Header->MipCount * this->Header->Frames * GetFaceCount())
+		* sizeof(SVTFAuxCompressionInfoEntry);
+
+	vlByte* lpCompressionInfo = new vlByte[ulCompressionInfoSize];
+
+	SVTFAuxCompressionInfoHeader* pInfoHeader = (SVTFAuxCompressionInfoHeader*)lpCompressionInfo;
+	pInfoHeader->CompressionLevel = iCompressionLevel;
+
+	if (iCompressionLevel == SVTFAuxCompressionInfoHeader::DEFAULT_COMPRESSION)
+		iCompressionLevel = Z_DEFAULT_COMPRESSION;
+
+	vlByte* lpCompressedImage = nullptr;
+
+	try
+	{
+		// Pre-emptively compress the image
+		z_stream zStream = { 0 };
+		if (deflateInit(&zStream, iCompressionLevel) != Z_OK)
+		{
+			LastError.Set("Unable to initialise VTF decompression stream!\n");
+			throw 0;
+		}
+
+		// Create upper-bound buffer for deflate
+		vlULong ulMaxDeflateSize = deflateBound(&zStream, this->uiImageBufferSize);
+		lpCompressedImage = new vlByte[ulMaxDeflateSize];
+		memset(lpCompressedImage, 0, ulMaxDeflateSize);
+
+		vlULong ulActualDeflateSize = 0;
+
+		// Actually do the compression
+		for (vlInt iMip = this->Header->MipCount - 1; iMip >= 0; --iMip)
+		{
+			vlInt iMipSize = ComputeMipmapSize(this->Header->Width, this->Header->Height, 1, iMip, this->Header->ImageFormat);
+
+			for (vlUInt uiFrame = 0; uiFrame < this->Header->Frames; ++uiFrame)
+			{
+				for (vlUInt uiFace = 0; uiFace < GetFaceCount(); ++uiFace)
+				{
+					vlByte* lpMipBits = GetData(uiFrame, uiFace, 0, iMip);
+
+					// Compress lpMipBits -> Next free data of lpCompressedImage
+					zStream.next_in = lpMipBits;
+					zStream.avail_in = iMipSize;
+					zStream.total_out = 0;
+
+					while (zStream.avail_in)
+					{
+						vlULong ulTotalWritten = ulActualDeflateSize + zStream.total_out;
+
+						zStream.next_out = lpCompressedImage + ulTotalWritten;
+						zStream.avail_out = ulMaxDeflateSize - ulTotalWritten;
+
+						vlInt zRet = deflate(&zStream, Z_FINISH);
+						if ((zRet != Z_OK) && (zRet != Z_STREAM_END))
+						{
+							LastError.Set("Unable to compress VTF!\n");
+							deflateEnd(&zStream);
+							throw 0;
+						}
+					}
+
+					// Update info and size
+					ulActualDeflateSize += zStream.total_out;
+
+					vlUInt uiInfoOffset = GetAuxInfoOffset(uiFrame, uiFace, iMip);
+					SVTFAuxCompressionInfoEntry* pInfoEntry = (SVTFAuxCompressionInfoEntry*)(lpCompressionInfo + uiInfoOffset);
+
+					pInfoEntry->CompressedSize = zStream.total_out;
+
+					deflateReset(&zStream);
+				}
+			}
+		}
+
+		// We now have a compressed image and filled out aux compression info, so we can continue saving in a slightly modified way.
+		if (!Writer->Open())
+			throw 0;
+
+		// Write the header to reserve space. This will be recalculated later, but we save with dummy data at first.
+		if (Writer->Write(this->Header, this->Header->HeaderSize) != this->Header->HeaderSize)
+		{
+			throw 0;
+		}
+
+		// Header that is modified to represent the compressed file
+		SVTFHeader modHeader = *this->Header;
+
+		vlULong ulFileOffset = this->Header->HeaderSize;
+
+		// Resources are guaranteed for compression-compatible VTF
+		for (vlUInt i = 0; i < this->Header->ResourceCount; i++)
+		{
+			modHeader.Resources[i].Data = ulFileOffset;
+
+			switch (this->Header->Resources[i].Type)
+			{
+			case VTF_LEGACY_RSRC_LOW_RES_IMAGE:
+				if (Writer->Write(this->lpThumbnailImageData, this->uiThumbnailBufferSize) != this->uiThumbnailBufferSize)
+				{
+					throw 0;
+				}
+
+				ulFileOffset += this->uiThumbnailBufferSize;
+				break;
+			case VTF_LEGACY_RSRC_IMAGE:
+			{
+				if (Writer->Write(lpCompressedImage, ulActualDeflateSize) != ulActualDeflateSize)
+				{
+					throw 0;
+				}
+
+				ulFileOffset += ulActualDeflateSize;
+				break;
+			}
+			case VTF_RSRC_AUX_COMPRESSION_INFO:
+			case VTF_RSRC_AUX_COMPRESSION_INFO | RSRCF_HAS_NO_DATA_CHUNK:
+			{
+				vlUInt uiCompressionInfoSize = ulCompressionInfoSize;
+				if (Writer->Write(&uiCompressionInfoSize, sizeof(vlUInt)) != sizeof(vlUInt))
+				{
+					throw 0;
+				}
+
+				if (Writer->Write(lpCompressionInfo, ulCompressionInfoSize) != ulCompressionInfoSize)
+				{
+					throw 0;
+				}
+
+				ulFileOffset += ulCompressionInfoSize;
+				break;
+			}
+			default:
+				if ((this->Header->Resources[i].Flags & RSRCF_HAS_NO_DATA_CHUNK) == 0)
+				{
+					if (Writer->Write(&this->Header->Data[i].Size, sizeof(vlUInt)) != sizeof(vlUInt))
+					{
+						throw 0;
+					}
+
+					if (Writer->Write(this->Header->Data[i].Data, this->Header->Data[i].Size) != this->Header->Data[i].Size)
+					{
+						throw 0;
+					}
+
+					ulFileOffset += sizeof(vlUInt) + this->Header->Data[i].Size;
+				}
+			}
+		}
+
+		// Write modified header.
+		Writer->Seek(0, SEEK_SET);
+
+		if (Writer->Write(&modHeader, this->Header->HeaderSize) != this->Header->HeaderSize)
+		{
+			throw 0;
+		}
+	}
+	catch (...)
+	{
+		delete[] lpCompressionInfo;
+		delete[] lpCompressedImage;
+		Writer->Close();
+
+		return vlFalse;
+	}
+
+	delete[] lpCompressionInfo;
+	delete[] lpCompressedImage;
+	Writer->Close();
+
+	return vlTrue;
+}
+
+//
 // GetHasImage()
 // A image can be loaded as header only, this function indicates weather
 // image data was loaded or not.
@@ -1233,6 +1602,31 @@ vlUInt CVTFFile::GetMinorVersion() const
 }
 
 //
+// SetVersion
+// Sets the version of the VTF
+//
+bool CVTFFile::SetVersion(vlUInt major, vlUInt minor)
+{
+	if (major != 7 || minor < 1 || minor > 6)
+		return false;
+
+	bool didSupportResources = GetSupportsResources();
+	
+	Header->Version[0] = major;
+	Header->Version[1] = minor;
+
+	bool doesSupportResources = GetSupportsResources();
+
+	// Add new resources for compatibility if we didn't previously
+	if (!didSupportResources && doesSupportResources) {
+		this->Header->Resources[this->Header->ResourceCount++].Type = VTF_LEGACY_RSRC_LOW_RES_IMAGE;
+		this->Header->Resources[this->Header->ResourceCount++].Type = VTF_LEGACY_RSRC_IMAGE;
+	}
+
+	return true;
+}
+
+//
 // ComputeResources()
 // Computes header VTF directory resources.
 //
@@ -1249,7 +1643,7 @@ vlVoid CVTFFile::ComputeResources()
 
 	// Correct header size.
 	STATIC_ASSERT(VTF_MAJOR_VERSION == 7, "HeaderSize needs calculation for new major version.");
-	STATIC_ASSERT(VTF_MINOR_VERSION == 5, "HeaderSize needs calculation for new minor version.");
+	STATIC_ASSERT(VTF_MINOR_VERSION == 6, "HeaderSize needs calculation for new minor version.");
 	switch(this->Header->Version[0])
 	{
 	case 7:
@@ -1272,6 +1666,9 @@ vlVoid CVTFFile::ComputeResources()
 			break;
 		case 5:
 			this->Header->HeaderSize = sizeof(SVTFHeader_75_A) + this->Header->ResourceCount * sizeof(SVTFResource);
+			break;
+		case 6:
+			this->Header->HeaderSize = sizeof(SVTFHeader_76_A) + this->Header->ResourceCount * sizeof(SVTFResource);
 			break;
 		}
 		break;
@@ -1618,7 +2015,10 @@ vlByte *CVTFFile::GetData(vlUInt uiFrame, vlUInt uiFace, vlUInt uiSlice, vlUInt 
 	if(!this->IsLoaded())
 		return 0;
 
-	return this->lpImageData + this->ComputeDataOffset(uiFrame, uiFace, uiSlice, uiMipmapLevel, this->Header->ImageFormat);
+	vlUInt uiOffset = this->ComputeDataOffset(uiFrame, uiFace, uiSlice, uiMipmapLevel, this->Header->ImageFormat);
+	assert(uiOffset < this->uiImageBufferSize);
+
+	return this->lpImageData + uiOffset;
 }
 
 //
@@ -1631,7 +2031,10 @@ vlVoid CVTFFile::SetData(vlUInt uiFrame, vlUInt uiFace, vlUInt uiSlice, vlUInt u
 	if(!this->IsLoaded() || this->lpImageData == 0)
 		return;
 
-	memcpy(this->lpImageData + this->ComputeDataOffset(uiFrame, uiFace, uiSlice, uiMipmapLevel, this->Header->ImageFormat), lpData, CVTFFile::ComputeMipmapSize(this->Header->Width, this->Header->Height, 1, uiMipmapLevel, this->Header->ImageFormat));
+	vlUInt uiOffset = this->ComputeDataOffset(uiFrame, uiFace, uiSlice, uiMipmapLevel, this->Header->ImageFormat);
+	assert(uiOffset < this->uiImageBufferSize);
+
+	memcpy(this->lpImageData + uiOffset, lpData, CVTFFile::ComputeMipmapSize(this->Header->Width, this->Header->Height, 1, uiMipmapLevel, this->Header->ImageFormat));
 }
 
 //
@@ -1937,6 +2340,41 @@ vlVoid *CVTFFile::SetResourceData(vlUInt uiType, vlUInt uiSize, vlVoid *lpData)
 }
 
 //
+// GetAuxCompressionLevel()
+// Gets the auxiliary compression level of the VTF.
+//
+vlInt CVTFFile::GetAuxCompressionLevel() const
+{
+	// Find the compression info and get data out of it
+	vlUInt uiDataSize;
+	SVTFAuxCompressionInfoHeader* pInfoHeader = (SVTFAuxCompressionInfoHeader*)this->GetResourceData(VTF_RSRC_AUX_COMPRESSION_INFO, uiDataSize);
+
+	if (!pInfoHeader)
+		return 0;
+	
+	return pInfoHeader->CompressionLevel;
+}
+
+//
+// SetAuxCompressionLevel()
+// Sets the auxiliary compression level of the VTF. Valid levels are 0-9 and SVTFAuxCompressionInfoHeader::DEFAULT_COMPRESSION
+//
+vlBool CVTFFile::SetAuxCompressionLevel(vlInt iCompressionLevel)
+{
+	if (this->GetMajorVersion() < 7 || (this->GetMajorVersion() == 7 && this->GetMinorVersion() < 6))
+	{
+		LastError.Set("VTF Version <7.6 does not support auxiliary compression.");
+		return vlFalse;
+	}
+
+	SVTFAuxCompressionInfoHeader compressionHeader;
+	compressionHeader.CompressionLevel = iCompressionLevel;
+
+	this->SetResourceData(VTF_RSRC_AUX_COMPRESSION_INFO, sizeof(SVTFAuxCompressionInfoHeader), &compressionHeader);
+	return vlTrue;
+}
+
+//
 // GenerateMipmaps()
 // Generate mipmaps from the first mipmap level.
 //
@@ -1974,140 +2412,97 @@ vlBool CVTFFile::GenerateMipmaps(vlUInt uiFace, vlUInt uiFrame, VTFMipmapFilter 
 	if(!this->IsLoaded())
 		return vlFalse;
 
-#ifdef USE_NVDXT
-	if(this->lpImageData == 0)
+	auto formatInfo = GetImageFormatInfo(GetFormat());
+	VTFImageFormat actualFormat = GetFormat();
+	vlByte* lpData = (vlByte*)GetData(uiFrame, uiFace, 0, 0);
+	bool bConverted = false;
+
+	// If the image is compressed or one of the other unsupported stbir types, we'll convert it to RGBA8888 for processing
+	if (formatInfo.bIsCompressed || formatInfo.uiAlphaBitsPerPixel < 8 || formatInfo.uiBlueBitsPerPixel < 8 ||
+		formatInfo.uiGreenBitsPerPixel < 8 || formatInfo.uiRedBitsPerPixel < 8)
 	{
-		LastError.Set("No image data to generate mipmaps from.");
-		return vlFalse;
+		bConverted = true;
+		lpData = new vlByte[GetWidth() * GetHeight() * 4];
+		if (!ConvertToRGBA8888(GetData(uiFrame, uiFace, 0, 0), lpData, GetWidth(), GetHeight(), GetFormat()))
+			return false;
+
+		actualFormat = IMAGE_FORMAT_RGBA8888;
+		formatInfo = GetImageFormatInfo(actualFormat);
 	}
 
-	if(this->Header->Depth > 1)
+	auto uiWidth = GetWidth();
+	auto uiHeight = GetHeight();
+	auto uiMipWidth = uiWidth >> 1;
+	auto uiMipHeight = uiHeight >> 1;
+
+	// Alloc a working buffer that will fit all of our mips
+	vlByte* lpWorkBuffer = new vlByte[uiMipWidth * uiMipHeight * formatInfo.uiBytesPerPixel];
+
+	// Determine datatype + channel count
+	stbir_datatype iDataType = STBIR_TYPE_UINT8;
+	if (actualFormat == IMAGE_FORMAT_RGB323232F || actualFormat == IMAGE_FORMAT_RGBA32323232F)
+		iDataType = STBIR_TYPE_FLOAT;
+	else if (actualFormat == IMAGE_FORMAT_RGBA16161616 || actualFormat == IMAGE_FORMAT_RGBA16161616 || 
+			actualFormat == IMAGE_FORMAT_RGBA16161616F)
+		iDataType = STBIR_TYPE_UINT16;
+
+	int iNumChannels = 0;
+	if (formatInfo.uiAlphaBitsPerPixel > 0) iNumChannels++;
+	if (formatInfo.uiGreenBitsPerPixel > 0) iNumChannels++;
+	if (formatInfo.uiBlueBitsPerPixel > 0) iNumChannels++;
+	if (formatInfo.uiRedBitsPerPixel > 0) iNumChannels++;
+
+	// Determine mip filter
+	stbir_filter iMipFilter;
+	switch(MipmapFilter)
 	{
-		LastError.Set("Mipmap generation for depth textures is not supported.");
-		return vlFalse;
-	}
-
-	assert(MipmapFilter >= 0 && MipmapFilter < MIPMAP_FILTER_COUNT);
-
-	if(this->Header->MipCount == 1)
-	{
-		return vlTrue;
-	}
-
-	// The mipmap callback NVMipmapCallback() will call ConvertFromRGBA8888() which will use the
-	// NVDXT lib to compress the image data if it is in a DXT format.  This is bad!!!  The
-	// nvDXTcompressRGBA() function only seems to be able to handle one call at a time and since
-	// we made a call for the mipmap generation the thing will crash.  Hence all this DXT nonsense.
-	// This took me a LONG time to figure out!  Go NVidia docs...
-	// Sidenote: this could very well cause problems in multithreaded applications!
-
-	// Get the format to generate mipmaps to.
-	VTFImageFormat MipmapImageFormat;
-	switch(this->Header->ImageFormat)
-	{
-	case IMAGE_FORMAT_DXT1:
-	case IMAGE_FORMAT_DXT1_ONEBITALPHA:
-	case IMAGE_FORMAT_DXT3:
-	case IMAGE_FORMAT_DXT5:
-		MipmapImageFormat = this->Header->ImageFormat;
-		break;
+	case MIPMAP_FILTER_BOX:
+		iMipFilter = STBIR_FILTER_BOX; break;
+	case MIPMAP_FILTER_TRIANGLE:
+		iMipFilter = STBIR_FILTER_TRIANGLE; break;
+	case MIPMAP_FILTER_CUBIC:
+		iMipFilter = STBIR_FILTER_CUBICBSPLINE; break;
+	case MIPMAP_FILTER_CATROM:
+		iMipFilter = STBIR_FILTER_CATMULLROM; break;
+	case MIPMAP_FILTER_MITCHELL:
+		iMipFilter = STBIR_FILTER_MITCHELL; break;
 	default:
-		MipmapImageFormat = IMAGE_FORMAT_RGBA8888;
-		break;
+		iMipFilter = STBIR_FILTER_DEFAULT; break;
 	}
 
-	nvCompressionOptions Options = nvCompressionOptions();
-
-	SNVCompressionUserData UserData = SNVCompressionUserData(this, uiFace, uiFrame, 0, MipmapImageFormat);
-
-	// Don't generate mipmaps.
-	Options.mipMapGeneration = kGenerateMipMaps;
-
-	Options.mipFilterType = (nvMipFilterTypes)MipmapFilter;
-
-	// Set the format.
-	switch(uiDXTQuality)
+	bool bOk = true;
+	for (vlUInt32 i = 1; i < GetMipmapCount(); ++i)
 	{
-	case DXT_QUALITY_LOW:
-		Options.quality = kQualityFastest;
-		break;
-	case DXT_QUALITY_MEDIUM:
-		Options.quality = kQualityNormal;
-		break;
-	case DXT_QUALITY_HIGH:
-		Options.quality = kQualityProduction;
-		break;
-	case DXT_QUALITY_HIGHEST:
-		Options.quality = kQualityHighest;
-		break;
-	}
-	switch(MipmapImageFormat)
-	{
-	case IMAGE_FORMAT_DXT1:
-		Options.textureFormat = kDXT1;
-		Options.bForceDXT1FourColors = true;
-		break;
-	case IMAGE_FORMAT_DXT1_ONEBITALPHA:
-		Options.bBinaryAlpha = true;
-		Options.bForceDXT1FourColors = true;
-		Options.textureFormat = kDXT1a;
-		break;
-	case IMAGE_FORMAT_DXT3:
-		Options.textureFormat = kDXT3;
-		break;
-	case IMAGE_FORMAT_DXT5:
-		Options.textureFormat = kDXT5;
-		break;
-	case IMAGE_FORMAT_RGBA8888:
-		Options.textureFormat = k8888;
-		Options.bSwapRB = true;
-		break;
-	}
+		bOk &= stbir_resize(
+			lpData, uiWidth, uiHeight, 0, lpWorkBuffer,
+			uiMipWidth, uiMipHeight, 0, iDataType, iNumChannels,
+			formatInfo.uiAlphaBitsPerPixel > 0, STBIR_FLAG_ALPHA_PREMULTIPLIED, STBIR_EDGE_CLAMP, STBIR_EDGE_CLAMP,
+			iMipFilter, iMipFilter, bSRGB ? STBIR_COLORSPACE_SRGB : STBIR_COLORSPACE_LINEAR, nullptr
+		);
 
-	if(MipmapImageFormat != IMAGE_FORMAT_RGBA8888)
-	{
-		// nvDXTcompressRGBA() fails on widths or heights of 1 or 2 so rescale those images.
-		if(this->Header->Width < 4)
+		if (bConverted)
 		{
-			Options.rescaleImageType = kRescalePreScale;
-			Options.rescaleImageFilter = kMipFilterPoint;
-			Options.scaleX = 4.0f;
+			vlUInt32 uiOffset = ComputeDataOffset(uiFrame, uiFace, 0, i, GetFormat());
+			assert(uiOffset < this->uiImageBufferSize);
+
+			bOk &= Convert(lpWorkBuffer, this->lpImageData + uiOffset, uiMipWidth, uiMipHeight, actualFormat, GetFormat());
+		}
+		else // Data can be set directly
+		{
+			SetData(uiFrame, uiFace, 0, i, lpWorkBuffer);
 		}
 
-		if(this->Header->Height < 4)
-		{
-			Options.rescaleImageType = kRescalePreScale;
-			Options.rescaleImageFilter = kMipFilterPoint;
-			Options.scaleY = 4.0f;
-		}
+		uiMipWidth >>= 1;
+		uiMipHeight >>= 1;
 	}
 
-	// The UserData struct gets passed to our callback.
-	Options.user_data = &UserData;
-
-	vlByte *lpImageData = new vlByte[this->ComputeImageSize(this->Header->Width, this->Header->Height, 1, IMAGE_FORMAT_RGBA8888)];
-	
-	if(!this->ConvertToRGBA8888(this->GetData(uiFace, uiFrame, 0, 0), lpImageData, this->Header->Width, this->Header->Height, this->Header->ImageFormat))
+	delete [] lpWorkBuffer;
+	if (bConverted)
 	{
-		delete []lpImageData;
-
-		return vlFalse;
+		delete [] lpData;
 	}
 
-	if(!nvDXTCompressWrapper(lpImageData, this->Header->Width, this->Header->Height, &Options, NVWriteCallback))
-	{
-		delete []lpImageData;
-
-		return vlFalse;
-	}
-
-	delete []lpImageData;
-
-	return vlTrue;
-#else
-	LastError.Set("NVDXT support required for CVTFFile::GenerateMipmaps().");
-	return vlFalse;
-#endif
+	return bOk;
 }
 
 //
@@ -2595,30 +2990,47 @@ static SVTFImageFormatInfo VTFImageFormatInfo[] =
 	{ "R32F",				 32,  4, 32,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_R32F
 	{ "RGB323232F",			 96, 12, 32, 32, 32,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_RGB323232F
 	{ "RGBA32323232F",		128, 16, 32, 32, 32, 32, vlFalse,  vlTrue },		// IMAGE_FORMAT_RGBA32323232F
-	{ "nVidia DST16",		 16,  2,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_NV_DST16
-	{ "nVidia DST24",		 24,  3,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_NV_DST24
-	{ "nVidia INTZ",		 32,  4,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_NV_INTZ
-	{ "nVidia RAWZ",		 32,  4,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_NV_RAWZ
-	{ "ATI DST16",			 16,  2,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_ATI_DST16
-	{ "ATI DST24",			 24,  3,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_ATI_DST24
-	{ "nVidia NULL",		 32,  4,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_NV_NULL
-	{ "ATI1N",				  4,  0,  0,  0,  0,  0,  vlTrue,  vlTrue },		// IMAGE_FORMAT_ATI1N
-	{ "ATI2N",				  8,  0,  0,  0,  0,  0,  vlTrue,  vlTrue }/*,		// IMAGE_FORMAT_ATI2N
-	{ "Xbox360 DST16",		 16,  0,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_X360_DST16
-	{ "Xbox360 DST24",		 24,  0,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_X360_DST24
-	{ "Xbox360 DST24F",		 24,  0,  0,  0,  0,  0, vlFalse , vlTrue },		// IMAGE_FORMAT_X360_DST24F
-	{ "Linear BGRX8888",	 32,  4,  8,  8,  8,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_BGRX8888
-	{ "Linear RGBA8888",     32,  4,  8,  8,  8,  8, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_RGBA8888
-	{ "Linear ABGR8888",	 32,  4,  8,  8,  8,  8, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_ABGR8888
-	{ "Linear ARGB8888",	 32,  4,  8,  8,  8,  8, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_ARGB8888
-	{ "Linear BGRA8888",	 32,  4,  8,  8,  8,  8, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_BGRA8888
-	{ "Linear RGB888",		 24,  3,  8,  8,  8,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_RGB888
-	{ "Linear BGR888",		 24,  3,  8,  8,  8,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_BGR888
-	{ "Linear BGRX5551",	 16,  2,  5,  5,  5,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_BGRX5551
-	{ "Linear I8",			  8,  1,  0,  0,  0,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_I8
-	{ "Linear RGBA16161616", 64,  8, 16, 16, 16, 16, vlFalse,  vlTrue },		// IMAGE_FORMAT_LINEAR_RGBA16161616
-	{ "LE BGRX8888",         32,  4,  8,  8,  8,  0, vlFalse,  vlTrue },		// IMAGE_FORMAT_LE_BGRX8888
-	{ "LE BGRA8888",		 32,  4,  8,  8,  8,  8, vlFalse,  vlTrue }*/		// IMAGE_FORMAT_LE_BGRA8888
+	{},
+	{},
+	{}, 
+	{ "NULL",				  32, 4,  0,  0,  0,  0, vlFalse, vlFalse },		// IMAGE_FORMAT_NV_NULL
+	{ "ATI2N",				  8,  0,  0,  0,  0,  0, vlTrue,  vlTrue  }, 		// IMAGE_FORMAT_ATI2N
+	{ "ATI1N",				  4,  0,  0,  0,  0,  0, vlTrue,  vlTrue  },		// IMAGE_FORMAT_ATI1N
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{ "BC7",					8,  0,  0,  0,  0,  0, vlTrue,  vlTrue  }			// IMAGE_FORMAT_BC7
 };
 
 SVTFImageFormatInfo const &CVTFFile::GetImageFormatInfo(VTFImageFormat ImageFormat)
@@ -2641,6 +3053,7 @@ vlUInt CVTFFile::ComputeImageSize(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiDept
 	{
 	case IMAGE_FORMAT_DXT1:
 	case IMAGE_FORMAT_DXT1_ONEBITALPHA:
+	case IMAGE_FORMAT_ATI1N:
 		if(uiWidth < 4 && uiWidth > 0)
 			uiWidth = 4;
 
@@ -2650,6 +3063,8 @@ vlUInt CVTFFile::ComputeImageSize(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiDept
 		return ((uiWidth + 3) / 4) * ((uiHeight + 3) / 4) * 8 * uiDepth;
 	case IMAGE_FORMAT_DXT3:
 	case IMAGE_FORMAT_DXT5:
+	case IMAGE_FORMAT_ATI2N:
+	case IMAGE_FORMAT_BC7:
 		if(uiWidth < 4 && uiWidth > 0)
 			uiWidth = 4;
 
@@ -2818,10 +3233,18 @@ vlUInt CVTFFile::ComputeDataOffset(vlUInt uiFrame, vlUInt uiFace, vlUInt uiSlice
 	uiOffset += uiTemp1 * uiFrame * uiFaceCount * uiSliceCount;
 	uiOffset += uiTemp1 * uiFace * uiSliceCount;
 	uiOffset += uiTemp2 * uiSlice;
-
-	assert(uiOffset < this->uiImageBufferSize);
 	
 	return uiOffset;
+}
+
+vlUInt CVTFFile::GetAuxInfoOffset(vlUInt iFrame, vlUInt iFace, vlUInt iMipLevel) const
+{
+	vlUInt faceCount = GetFaceCount();
+	return sizeof(SVTFAuxCompressionInfoHeader) +
+		(	(this->Header->MipCount - 1 - iMipLevel) * this->Header->Frames * faceCount +
+			iFrame * faceCount +
+			iFace ) *
+		sizeof(SVTFAuxCompressionInfoEntry);
 }
 
 //-----------------------------------------------------------------------------------------------------
@@ -2836,12 +3259,12 @@ vlBool CVTFFile::ConvertToRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt uiWi
 }
 
 //-----------------------------------------------------------------------------------------------------
-// DecompressDXTn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat)
+// DecompressBCn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat)
 //
-// Converts data from the DXT1 to RGBA8888 format. Data is read from *src
+// Converts data from the BCn to RGBA8888 format. Data is read from *src
 // and written to *dst. Width and height are needed to it knows how much data to process
 //-----------------------------------------------------------------------------------------------------
-vlBool CVTFFile::DecompressDXTn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat)
+vlBool CVTFFile::DecompressBCn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat)
 {
 	CMP_Texture srcTexture = {0};
 	srcTexture.dwSize     = sizeof( srcTexture );
@@ -2854,7 +3277,6 @@ vlBool CVTFFile::DecompressDXTn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt
 
 	CMP_CompressOptions options = {0};
 	options.dwSize        = sizeof(options);
-	options.fquality      = 1.0f;
 	options.dwnumThreads  = 0;
 	options.bDXT1UseAlpha = false;
 
@@ -2887,11 +3309,11 @@ vlBool CVTFFile::ConvertFromRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt ui
 }
 
 //
-// CompressDXTn()
+// CompressBCn()
 // Compress input image data (lpSource) to output image data (lpDest) of format DestFormat
-// where DestFormat is of format DXTn.  Uses NVidia DXT library.
+// where DestFormat is of format BCn.  Uses Compressonator library.
 //
-vlBool CVTFFile::CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat)
+vlBool CVTFFile::CompressBCn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat)
 {
 	CMP_Texture srcTexture = {0};
 	srcTexture.dwSize     = sizeof( srcTexture );
@@ -2904,7 +3326,6 @@ vlBool CVTFFile::CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, 
 
 	CMP_CompressOptions options = {0};
 	options.dwSize        = sizeof(options);
-	options.fquality      = 1.0f;
 	options.dwnumThreads  = 0;
 	options.bDXT1UseAlpha = DestFormat == IMAGE_FORMAT_DXT1_ONEBITALPHA;
 
@@ -3031,7 +3452,7 @@ vlUInt16 FP16ToUnorm(vlUInt16 uiValue)
 	sValue *= sFP16HDRExposure;
 	sValue = Reinhard(sValue);
 	sValue *= 65535.0f;
-	sValue = min(max(sValue, 0.0f), 65535.0f);
+	sValue = std::min(std::max(sValue, 0.0f), 65535.0f);
 	return (vlUInt16) sValue;
 }
 
@@ -3062,7 +3483,7 @@ typedef struct tagSVTFImageConvertInfo
 	VTFImageFormat Format;
 } SVTFImageConvertInfo;
 
-static SVTFImageConvertInfo VTFImageConvertInfo[] =
+static SVTFImageConvertInfo VTFImageConvertInfo[IMAGE_FORMAT_COUNT] =
 {
 	{	 32,  4,  8,  8,  8,  8,	 0,	 1,	 2,	 3,	vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_RGBA8888},
 	{	 32,  4,  8,  8,  8,  8,	 3,	 2,	 1,	 0, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_ABGR8888},
@@ -3094,28 +3515,47 @@ static SVTFImageConvertInfo VTFImageConvertInfo[] =
 	{ 	 32,  4, 32,  0,  0,  0,	 0,	-1,	-1,	-1, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_R32F},
 	{ 	 96, 12, 32, 32, 32,  0,	 0,	 1,	 2,	-1, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_RGB323232F},
 	{	128, 16, 32, 32, 32, 32,	 0,	 1,	 2,	 3, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_RGBA32323232F},
-	{    16,  2, 16,  0,  0,  0,	 0,	-1,	-1,	-1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_NV_DST16},
-	{	 24,  3, 24,  0,  0,  0,	 0,	-1,	-1,	-1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_NV_DST24},
-	{	 32,  4,  0,  0,  0,  0,	-1,	-1,	-1,	-1, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_NV_INTZ},
-	{	 24,  3,  0,  0,  0,  0,    -1,	-1,	-1,	-1, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_NV_RAWZ},
-	{	 16,  2, 16,  0,  0,  0,	 0,	-1,	-1,	-1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_ATI_DST16},
-	{	 24,  3, 24,  0,  0,  0,	 0,	-1,	-1,	-1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_ATI_DST24},
+	{},
+	{},
+	{},
 	{	 32,  4,  0,  0,  0,  0,	-1,	-1,	-1,	-1, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_NV_NULL},
-	{	  4,  0,  0,  0,  0,  0,	-1, -1, -1, -1,  vlTrue, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_ATI1N},
-	{     8,  0,  0,  0,  0,  0,	-1, -1, -1, -1,  vlTrue, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_ATI2N}/*,
-	{	 16,  2, 16,  0,  0,  0,	 0, -1, -1, -1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_X360_DST16},
-	{	 24,  3, 24,  0,  0,  0,	 0, -1, -1, -1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_X360_DST24},
-	{	 24,  3,  0,  0,  0,  0,	-1, -1, -1, -1, vlFalse, vlFalse,	NULL,	NULL,		IMAGE_FORMAT_X360_DST24F},
-	{ 	 32,  4,  8,  8,  8,  0,	 2,	 1,	 0,	-1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_BGRX8888},
-	{	 32,  4,  8,  8,  8,  8,	 0,	 1,	 2,	 3,	vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_RGBA8888},
-	{	 32,  4,  8,  8,  8,  8,	 3,	 2,	 1,	 0, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_ABGR8888},
-	{ 	 32,  4,  8,  8,  8,  8,	 3,	 0,	 1,	 2, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_ARGB8888},
-	{ 	 32,  4,  8,  8,  8,  8,	 2,	 1,	 0,	 3, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_BGRA8888},
-	{	 32,  4,  8,  8,  8,  8,	 0,	 1,	 2,	-1,	vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_RGB888},
-	{	 32,  4,  8,  8,  8,  8,	 2,	 1,	 0,	-1,	vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_BGR888},
-	{ 	 16,  2,  5,  5,  5,  0,	 2,	 1,	 0,	-1, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_BGRX5551},
-	{	  8,  1,  8,  8,  8,  0,	 0,	-1,	-1,	-1, vlFalse,  vlTrue,	ToLuminance,	FromLuminance,	IMAGE_FORMAT_LINEAR_I8},	
-	{	 64,  8, 16, 16, 16, 16,	 0,	 1,	 2,	 3, vlFalse,  vlTrue,	NULL,	NULL,		IMAGE_FORMAT_LINEAR_RGBA16161616}*/
+	{     8,  0,  0,  0,  0,  0,	-1, -1, -1, -1,  vlTrue, vlTrue,	NULL,	NULL,		IMAGE_FORMAT_ATI2N},
+	{	  4,  0,  0,  0,  0,  0,	-1, -1, -1, -1,  vlTrue, vlTrue,	NULL,	NULL,		IMAGE_FORMAT_ATI1N},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{	  8,  0,  0,  0,  0,  0,	-1, -1, -1, -1,	 vlTrue, vlTrue,	NULL, NULL,			IMAGE_FORMAT_BC7},
 };
 
 // Get each channels shift and mask (for encoding and decoding).
@@ -3413,7 +3853,10 @@ vlBool CVTFFile::Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUIn
 		case IMAGE_FORMAT_DXT1_ONEBITALPHA:
 		case IMAGE_FORMAT_DXT3:
 		case IMAGE_FORMAT_DXT5:
-			bResult = CVTFFile::DecompressDXTn(lpSource, lpSourceRGBA, uiWidth, uiHeight, SourceFormat);
+		case IMAGE_FORMAT_ATI2N:
+		case IMAGE_FORMAT_ATI1N:
+		case IMAGE_FORMAT_BC7:
+			bResult = CVTFFile::DecompressBCn(lpSource, lpSourceRGBA, uiWidth, uiHeight, SourceFormat);
 			break;
 		default:
 			bResult = CVTFFile::Convert(lpSource, lpSourceRGBA, uiWidth, uiHeight, SourceFormat, IMAGE_FORMAT_RGBA8888);
@@ -3429,7 +3872,10 @@ vlBool CVTFFile::Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUIn
 			case IMAGE_FORMAT_DXT1_ONEBITALPHA:
 			case IMAGE_FORMAT_DXT3:
 			case IMAGE_FORMAT_DXT5:
-				bResult = CVTFFile::CompressDXTn(lpSourceRGBA, lpDest, uiWidth, uiHeight, DestFormat);
+			case IMAGE_FORMAT_ATI2N:
+			case IMAGE_FORMAT_ATI1N:
+			case IMAGE_FORMAT_BC7:
+				bResult = CVTFFile::CompressBCn(lpSourceRGBA, lpDest, uiWidth, uiHeight, DestFormat);
 				break;
 			default:
 				bResult = CVTFFile::Convert(lpSourceRGBA, lpDest, uiWidth, uiHeight, IMAGE_FORMAT_RGBA8888, DestFormat);
@@ -3659,4 +4105,61 @@ vlVoid CVTFFile::MirrorImage(vlByte *lpImageDataRGBA8888, vlUInt uiWidth, vlUInt
 			*pTwo = uiTemp;
 		}
 	}
+}
+
+//
+// ConvertInPlace
+// Convert the image to format in place
+//
+vlBool CVTFFile::ConvertInPlace(VTFImageFormat format)
+{	
+	const vlUInt uiSrcWidth = GetWidth();
+	const vlUInt uiSrcHeight = GetHeight();
+	const vlUInt uiSrcDepth = GetDepth();
+	const vlUInt uiMipCount = GetMipmapCount();
+	const vlUInt uiFrameCount = GetFrameCount();
+	const vlUInt uiFaceCount = GetFaceCount();
+	const vlUInt uiSliceCount = GetDepth();
+
+	// Compute and allocate a working buffer- will replace lpImageData at the end
+	const vlUInt usBufferSize = this->ComputeImageSize(this->Header->Width, this->Header->Height, uiMipCount, format) * uiFrameCount * uiFaceCount;
+	auto* buffer = new vlByte[usBufferSize];
+
+	// Holy sweet mother of nested loops...
+	for(vlUInt uiFrame = 0; uiFrame < uiFrameCount; ++uiFrame)
+	{
+		for(vlUInt uiFace = 0; uiFace < uiFaceCount; ++uiFace)
+		{
+			for(vlUInt uiSlice = 0; uiSlice < uiSliceCount; ++uiSlice)
+			{
+				for(vlUInt uiMip = 0; uiMip < uiMipCount; ++uiMip)
+				{
+					auto* lpSrcData = GetData(uiFrame, uiFace, uiSlice, uiMip);
+
+					const vlUInt uiOffset = ComputeDataOffset(uiFrame, uiFace, uiSlice, uiMip, format);
+					assert(uiOffset < usBufferSize);
+
+					auto* lpDstData = (vlByte*)buffer + uiOffset;
+					
+					vlUInt uiMipWidth, uiMipHeight, uiMipDepth;
+					ComputeMipmapDimensions(uiSrcWidth, uiSrcHeight, uiSrcDepth, uiMip, uiMipWidth, uiMipHeight, uiMipDepth);
+					if (!Convert(lpSrcData, lpDstData, uiMipWidth, uiMipHeight, GetFormat(), format))
+					{
+						delete [] buffer;
+						return false;
+					}
+				}
+			}
+		}
+	}
+	
+	// Recompute image buffer size
+	this->uiImageBufferSize = usBufferSize;
+	
+	auto* oldData = this->lpImageData;
+	this->lpImageData = buffer;
+	this->Header->ImageFormat = format;
+	
+	delete [] oldData;
+	return true;
 }
