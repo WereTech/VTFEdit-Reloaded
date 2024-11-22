@@ -249,8 +249,9 @@ typedef enum tagVTFResizeMethod
     RESIZE_NEAREST_POWER2 = 0,
     RESIZE_BIGGEST_POWER2,
     RESIZE_SMALLEST_POWER2,
+    RESIZE_NEAREST_MULTIPLE4,
     RESIZE_SET,
-	RESIZE_COUNT
+    RESIZE_COUNT
 } VTFResizeMethod;
 
 //! Spheremap creation look direction indices.

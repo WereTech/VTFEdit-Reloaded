@@ -53,12 +53,6 @@ namespace VTFEdit
 	private: System::Windows::Forms::CheckBox^ chkSphereMap;
 	private: System::Windows::Forms::CheckBox^ chkReflectivity;
 
-
-
-
-
-
-
 	private: System::Windows::Forms::ContextMenu^ mnuReset;
 	private: System::Windows::Forms::MenuItem^ btnReset;
 	private: System::Windows::Forms::GroupBox^ grpGeneral;
@@ -66,13 +60,11 @@ namespace VTFEdit
 
 	private: System::Windows::Forms::GroupBox^ grpMiscellaneous;
 
-
 	private: System::Windows::Forms::GroupBox^ grpGammaCorrection;
 	private: System::Windows::Forms::CheckBox^ chkGammaCorrection;
 	private: System::Windows::Forms::NumericUpDown^ numGammaCorrection;
 	private: System::Windows::Forms::Label^ lblGammaCorrection;
 	private: System::Windows::Forms::GroupBox^ grpResize;
-
 
 	private: System::Windows::Forms::ComboBox^ cboResizeFilter;
 	private: System::Windows::Forms::Label^ lblResizeFilter;
@@ -81,7 +73,6 @@ namespace VTFEdit
 	private: System::Windows::Forms::Label^ lblResizeMethod;
 	private: System::Windows::Forms::CheckBox^ chkResizeClamp;
 	private: System::Windows::Forms::ToolTip^ tipMain;
-
 
 	private: System::Windows::Forms::ComboBox^ cboMaximumWidth;
 	private: System::Windows::Forms::Label^ lblMaximumWidth;
@@ -95,20 +86,6 @@ namespace VTFEdit
 	private: System::Windows::Forms::TabPage^ tabGeneral;
 	private: System::Windows::Forms::TabPage^ tabAdvanced;
 	private: System::Windows::Forms::GroupBox^ grpAdvancedOptions;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	private: System::Windows::Forms::GroupBox^ grpLuminanceWeights;
 	private: System::Windows::Forms::Label^ lblLuminanceWeightsB;
@@ -142,7 +119,7 @@ namespace VTFEdit
 	private: System::Windows::Forms::TextBox^ txtInformationVersion;
 	private: System::Windows::Forms::Label^ lblInformationModification;
 	private: System::Windows::Forms::Label^ lblInformationVersion;
-private: System::Windows::Forms::CheckBox^ chkSrgb;
+	private: System::Windows::Forms::CheckBox^ chkSrgb;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -319,7 +296,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->cboTextureType->Items->AddRange(gcnew cli::array< System::Object^  >(3) { L"Animated Texture", L"Environment Map", L"Volume Texture" });
 			this->cboTextureType->Location = System::Drawing::Point(78, 53);
 			this->cboTextureType->Name = L"cboTextureType";
-			this->cboTextureType->Size = System::Drawing::Size(120, 21);
+			this->cboTextureType->Size = System::Drawing::Size(125, 21);
 			this->cboTextureType->TabIndex = 5;
 			this->tipMain->SetToolTip(this->cboTextureType, L"The output image type.");
 			this->cboTextureType->SelectedIndexChanged += gcnew System::EventHandler(this, &CVTFOptions::cboTextureType_SelectedIndexChanged);
@@ -338,13 +315,13 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			// 
 			this->cboMipmapFilter->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->cboMipmapFilter->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
-			this->cboMipmapFilter->Items->AddRange(gcnew cli::array< System::Object^  >(14) {
-				L"Point", L"Box", L"Triangle", L"Quadratic",
-					L"Cubic", L"Catrom", L"Mitchell", L"Gaussian", L"Sine Cardinal", L"Bessel", L"Hanning", L"Hamming", L"Blackman", L"Kaiser"
+			this->cboMipmapFilter->Items->AddRange(gcnew cli::array< System::Object^  >(6) {
+				L"Default", L"Box", L"Triangle", L"Cubic",
+					L"Catmull", L"Mitchell"
 			});
 			this->cboMipmapFilter->Location = System::Drawing::Point(84, 39);
 			this->cboMipmapFilter->Name = L"cboMipmapFilter";
-			this->cboMipmapFilter->Size = System::Drawing::Size(120, 21);
+			this->cboMipmapFilter->Size = System::Drawing::Size(125, 21);
 			this->cboMipmapFilter->TabIndex = 2;
 			this->tipMain->SetToolTip(this->cboMipmapFilter, L"The filter for resampling image data.");
 			// 
@@ -383,7 +360,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			});
 			this->cboFormat->Location = System::Drawing::Point(78, 15);
 			this->cboFormat->Name = L"cboFormat";
-			this->cboFormat->Size = System::Drawing::Size(120, 21);
+			this->cboFormat->Size = System::Drawing::Size(125, 21);
 			this->cboFormat->TabIndex = 1;
 			this->tipMain->SetToolTip(this->cboFormat, L"The output image format for textures with no alpha channel. Common values are DXT"
 				L"1, BGR888 and UV88.");
@@ -434,7 +411,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->grpGeneral->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->grpGeneral->Location = System::Drawing::Point(6, 15);
 			this->grpGeneral->Name = L"grpGeneral";
-			this->grpGeneral->Size = System::Drawing::Size(205, 98);
+			this->grpGeneral->Size = System::Drawing::Size(210, 98);
 			this->grpGeneral->TabIndex = 0;
 			this->grpGeneral->TabStop = false;
 			this->grpGeneral->Text = L"General:";
@@ -451,6 +428,9 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->chkSrgb->TabIndex = 6;
 			this->chkSrgb->Text = L"sRGB Color Space";
 			this->chkSrgb->UseVisualStyleBackColor = true;
+			this->tipMain->SetToolTip(this->chkSrgb, L"Whether or not to treat the input image as sRGB instead of Linear when generating "
+				L"mipmaps or resizing. \r\nTurn this off when creating textures that are not meant to be viewed directly, such as normal "
+				L"maps and specular masks. \r\n(aka turn this off for pretty much anything that's not a diffuse/basetexture).");
 			// 
 			// cboAlphaFormat
 			// 
@@ -464,7 +444,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			});
 			this->cboAlphaFormat->Location = System::Drawing::Point(78, 34);
 			this->cboAlphaFormat->Name = L"cboAlphaFormat";
-			this->cboAlphaFormat->Size = System::Drawing::Size(120, 21);
+			this->cboAlphaFormat->Size = System::Drawing::Size(125, 21);
 			this->cboAlphaFormat->TabIndex = 3;
 			this->tipMain->SetToolTip(this->cboAlphaFormat, L"The output image format for textures with an alpha channel. Common values are DXT"
 				L"5 and BGRA888.");
@@ -487,9 +467,9 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->grpMipmaps->Controls->Add(this->chkMipmaps);
 			this->grpMipmaps->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->grpMipmaps->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
-			this->grpMipmaps->Location = System::Drawing::Point(8, 283);
+			this->grpMipmaps->Location = System::Drawing::Point(6, 282);
 			this->grpMipmaps->Name = L"grpMipmaps";
-			this->grpMipmaps->Size = System::Drawing::Size(210, 67);
+			this->grpMipmaps->Size = System::Drawing::Size(220, 67);
 			this->grpMipmaps->TabIndex = 2;
 			this->grpMipmaps->TabStop = false;
 			this->grpMipmaps->Text = L"Mipmaps:";
@@ -568,7 +548,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->grpResize->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->grpResize->Location = System::Drawing::Point(8, 117);
 			this->grpResize->Name = L"grpResize";
-			this->grpResize->Size = System::Drawing::Size(203, 146);
+			this->grpResize->Size = System::Drawing::Size(210, 146);
 			this->grpResize->TabIndex = 1;
 			this->grpResize->TabStop = false;
 			this->grpResize->Text = L"Resize:";
@@ -581,9 +561,9 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 				L"1", L"2", L"4", L"8", L"16", L"32", L"64",
 					L"128", L"256", L"512", L"1024", L"2048", L"4096"
 			});
-			this->cboMaximumHeight->Location = System::Drawing::Point(78, 122);
+			this->cboMaximumHeight->Location = System::Drawing::Point(76, 122);
 			this->cboMaximumHeight->Name = L"cboMaximumHeight";
-			this->cboMaximumHeight->Size = System::Drawing::Size(120, 21);
+			this->cboMaximumHeight->Size = System::Drawing::Size(125, 21);
 			this->cboMaximumHeight->TabIndex = 11;
 			this->tipMain->SetToolTip(this->cboMaximumHeight, L"Maximum height.");
 			// 
@@ -605,9 +585,9 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 				L"1", L"2", L"4", L"8", L"16", L"32", L"64",
 					L"128", L"256", L"512", L"1024", L"2048", L"4096"
 			});
-			this->cboMaximumWidth->Location = System::Drawing::Point(78, 103);
+			this->cboMaximumWidth->Location = System::Drawing::Point(76, 103);
 			this->cboMaximumWidth->Name = L"cboMaximumWidth";
-			this->cboMaximumWidth->Size = System::Drawing::Size(120, 21);
+			this->cboMaximumWidth->Size = System::Drawing::Size(125, 21);
 			this->cboMaximumWidth->TabIndex = 9;
 			this->tipMain->SetToolTip(this->cboMaximumWidth, L"Maximum width.");
 			// 
@@ -637,15 +617,15 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			// 
 			this->cboResizeMethod->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->cboResizeMethod->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
-			this->cboResizeMethod->Items->AddRange(gcnew cli::array< System::Object^  >(3) {
+			this->cboResizeMethod->Items->AddRange(gcnew cli::array< System::Object^  >(4) {
 				L"Nearest Power Of 2", L"Biggest Power Of 2",
-					L"Smallest Power Of 2"
+					L"Smallest Power Of 2", L"Nearest Multiple Of 4"
 			});
-			this->cboResizeMethod->Location = System::Drawing::Point(78, 38);
+			this->cboResizeMethod->Location = System::Drawing::Point(76, 38);
 			this->cboResizeMethod->Name = L"cboResizeMethod";
-			this->cboResizeMethod->Size = System::Drawing::Size(120, 21);
+			this->cboResizeMethod->Size = System::Drawing::Size(125, 21);
 			this->cboResizeMethod->TabIndex = 2;
-			this->tipMain->SetToolTip(this->cboResizeMethod, L"The method for choosing which power of 2 to use.");
+			this->tipMain->SetToolTip(this->cboResizeMethod, L"The method to resize your image.");
 			// 
 			// lblResizeMethod
 			// 
@@ -661,13 +641,13 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			// 
 			this->cboResizeFilter->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->cboResizeFilter->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
-			this->cboResizeFilter->Items->AddRange(gcnew cli::array< System::Object^  >(14) {
-				L"Point", L"Box", L"Triangle", L"Quadratic",
-					L"Cubic", L"Catrom", L"Mitchell", L"Gaussian", L"Sine Cardinal", L"Bessel", L"Hanning", L"Hamming", L"Blackman", L"Kaiser"
+			this->cboResizeFilter->Items->AddRange(gcnew cli::array< System::Object^  >(6) {
+				L"Default", L"Box", L"Triangle", L"Cubic",
+					L"Catmull", L"Mitchell"
 			});
-			this->cboResizeFilter->Location = System::Drawing::Point(78, 57);
+			this->cboResizeFilter->Location = System::Drawing::Point(76, 57);
 			this->cboResizeFilter->Name = L"cboResizeFilter";
-			this->cboResizeFilter->Size = System::Drawing::Size(120, 21);
+			this->cboResizeFilter->Size = System::Drawing::Size(125, 21);
 			this->cboResizeFilter->TabIndex = 4;
 			this->tipMain->SetToolTip(this->cboResizeFilter, L"The filter for resampling image data.");
 			// 
@@ -771,7 +751,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->tabOptions->Location = System::Drawing::Point(6, 6);
 			this->tabOptions->Name = L"tabOptions";
 			this->tabOptions->SelectedIndex = 0;
-			this->tabOptions->Size = System::Drawing::Size(233, 376);
+			this->tabOptions->Size = System::Drawing::Size(238, 376);
 			this->tabOptions->TabIndex = 3;
 			// 
 			// tabGeneral
@@ -780,7 +760,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->tabGeneral->Controls->Add(this->grpMipmaps);
 			this->tabGeneral->Location = System::Drawing::Point(4, 22);
 			this->tabGeneral->Name = L"tabGeneral";
-			this->tabGeneral->Size = System::Drawing::Size(225, 350);
+			this->tabGeneral->Size = System::Drawing::Size(230, 350);
 			this->tabGeneral->TabIndex = 0;
 			this->tabGeneral->Text = L"General";
 			// 
@@ -790,7 +770,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->tabAdvanced->Controls->Add(this->grpLuminanceWeights);
 			this->tabAdvanced->Location = System::Drawing::Point(4, 22);
 			this->tabAdvanced->Name = L"tabAdvanced";
-			this->tabAdvanced->Size = System::Drawing::Size(225, 350);
+			this->tabAdvanced->Size = System::Drawing::Size(230, 350);
 			this->tabAdvanced->TabIndex = 1;
 			this->tabAdvanced->Text = L"Advanced";
 			// 
@@ -878,7 +858,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->tabResources->Controls->Add(this->grpResourceOptions);
 			this->tabResources->Location = System::Drawing::Point(4, 22);
 			this->tabResources->Name = L"tabResources";
-			this->tabResources->Size = System::Drawing::Size(225, 350);
+			this->tabResources->Size = System::Drawing::Size(230, 350);
 			this->tabResources->TabIndex = 2;
 			this->tabResources->Text = L"Resources";
 			// 
@@ -1075,7 +1055,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->AcceptButton = this->btnOK;
 			this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
 			this->CancelButton = this->btnCancel;
-			this->ClientSize = System::Drawing::Size(244, 416);
+			this->ClientSize = System::Drawing::Size(249, 416);
 			this->Controls->Add(this->tabOptions);
 			this->Controls->Add(this->btnCancel);
 			this->Controls->Add(this->btnOK);
@@ -1086,7 +1066,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 			this->MinimizeBox = false;
 			this->Name = L"CVTFOptions";
 			this->ShowInTaskbar = false;
-			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
+			this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
 			this->Text = L"VTF Options";
 			this->Load += gcnew System::EventHandler(this, &CVTFOptions::CVTFOptions_Load);
 			this->grpMiscellaneous->ResumeLayout(false);
@@ -1643,7 +1623,7 @@ private: System::Windows::Forms::CheckBox^ chkSrgb;
 		this->chkMipmaps->Checked = true;
 		this->cboMipmapFilter->SelectedIndex = 1;
 
-		this->cboVersion->SelectedIndex = 0;
+		this->cboVersion->SelectedIndex = 1;
 
 		this->chkReflectivity->Checked = true;
 		this->chkThumbnail->Checked = true;

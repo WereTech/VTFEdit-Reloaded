@@ -288,6 +288,7 @@ namespace VTFEdit
 			// 
 			// txtOutputFolder
 			// 
+			this->txtOutputFolder->AllowDrop = true;
 			this->txtOutputFolder->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->txtOutputFolder->Location = System::Drawing::Point(106, 31);
@@ -319,6 +320,7 @@ namespace VTFEdit
 			// 
 			// txtInputFolder
 			// 
+			this->txtInputFolder->AllowDrop = true;
 			this->txtInputFolder->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->txtInputFolder->Location = System::Drawing::Point(106, 12);

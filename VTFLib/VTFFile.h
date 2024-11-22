@@ -286,6 +286,8 @@ namespace VTFLib
 	private:
 		vlBool IsPowerOfTwo(vlUInt uiSize);
 		vlUInt NextPowerOfTwo(vlUInt uiSize);
+		vlBool IsMultipleOfFour(vlUInt uiSize);
+		vlUInt NearestMultipleOfFour(vlUInt uiSize);
 
 		vlVoid ComputeResources();	 //!< Computes header VTF directory resources.
 
@@ -306,6 +308,7 @@ namespace VTFLib
 
 		vlUInt GetMajorVersion() const;	 //!< Returns the VTF file major version number.
 		vlUInt GetMinorVersion() const;	 //!< Returns the VTF file minor version number.
+		vlVoid SetMinorVersion(vlUInt version);	 //!< Sets the VTF file minor version number.
 		vlUInt GetSize() const;			 //!< Returns the VTF file size in bytes.
 
 		vlUInt GetWidth() const;	//!< Returns the width of the image in pixels from the VTF header.

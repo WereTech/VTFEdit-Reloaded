@@ -753,12 +753,12 @@ namespace VTFEdit
 			// 
 			// cboShader
 			// 
-			this->cboShader->Items->AddRange(gcnew cli::array< System::Object^  >(43) {
+			this->cboShader->Items->AddRange(gcnew cli::array< System::Object^ >(44) {
 				L"Aftershock", L"Cable", L"Character", L"Core",
 					L"DecalModulate", L"DepthOfField", L"Engine_Post", L"EyeRefract", L"Eyes", L"LensFX", L"LightmappedGeneric", L"LightmappedReflective",
 					L"LightmappedTwoTexture", L"Lightmapped_4WayBlend", L"Modulate", L"MonitorScreen", L"MotionBlur", L"Multiblend", L"PaintBlob",
 					L"ParallaxTest", L"Pyro_vision", L"RGBFilmGrain", L"Refract", L"Screenspace_general", L"Shadow", L"Sky", L"SolidEnergy", L"SplineRope",
-					L"SpriteCard", L"Subrect", L"Suppression", L"SurfaceGGX", L"Teeth", L"UnlitGeneric", L"UnlitTwoTexture", L"VertexLitGeneric",
+					L"Sprite", L"SpriteCard", L"Subrect", L"Suppression", L"SurfaceGGX", L"Teeth", L"UnlitGeneric", L"UnlitTwoTexture", L"VertexLitGeneric",
 					L"VolumeCloud", L"VortWarp", L"Water", L"WindowImposter", L"WorldGGX", L"WorldTwoTextureBlend", L"WorldVertexTransition"
 			});
 			this->cboShader->Location = System::Drawing::Point(72, 12);

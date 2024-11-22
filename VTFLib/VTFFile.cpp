@@ -190,47 +190,32 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 	//
 
 	// Check if width is valid (power of 2 and fits in a short).
-	if(!this->IsPowerOfTwo(uiWidth) || uiWidth > 0xffff)
+	if(!this->IsMultipleOfFour(uiWidth) || uiWidth > 0xffff)
 	{
-		if(uiWidth == 0)
+		// 2 is valid since it's a power of 2, but I don't want to do more than this.
+		if (uiWidth == 0 || uiWidth != 2)
 		{
-			LastError.Set("Invalid image width.  Width must be nonzero.");
-		}
-		else
-		{
-			vlUInt uiNextPowerOfTwo = this->NextPowerOfTwo(uiWidth);
-			LastError.SetFormatted("Invalid image width %u.  Width must be a power of two (nearest powers are %u and %u).", uiWidth, uiNextPowerOfTwo >> 1, uiNextPowerOfTwo);
+			LastError.SetFormatted("Invalid image width %u. Width must be a power of two or multiple of four.", uiWidth);
 		}
 		return vlFalse;
 	}
 
 	// Check if height is valid (power of 2 and fits in a short).
-	if(!this->IsPowerOfTwo(uiHeight) || uiHeight > 0xffff)
+	if(!this->IsMultipleOfFour(uiHeight) || uiHeight > 0xffff)
 	{
-		if(uiHeight == 0)
+		if (uiHeight == 0 || uiHeight == 2)
 		{
-			LastError.Set("Invalid image height.  Height must be nonzero.");
-		}
-		else
-		{
-			vlUInt uiNextPowerOfTwo = this->NextPowerOfTwo(uiHeight);
-			LastError.SetFormatted("Invalid image height %u.  Height must be a power of two (nearest powers are %u and %u).", uiHeight, uiNextPowerOfTwo >> 1, uiNextPowerOfTwo);
+			LastError.SetFormatted("Invalid image height %u. Height must be a power of two or multiple of four.", uiHeight);
 		}
 		return vlFalse;
 	}
 
-	// Check if height is valid (power of 2 and fits in a short).
+	// Check if depth is valid (power of 2 and fits in a short).
 	if(!this->IsPowerOfTwo(uiSlices) || uiSlices > 0xffff)
 	{
-		if(uiHeight == 0)
-		{
-			LastError.Set("Invalid image depth.  Depth must be nonzero.");
-		}
-		else
-		{
-			vlUInt uiNextPowerOfTwo = this->NextPowerOfTwo(uiSlices);
-			LastError.SetFormatted("Invalid image depth %u.  Depth must be a power of two (nearest powers are %u and %u).", uiSlices, uiNextPowerOfTwo >> 1, uiNextPowerOfTwo);
-		}
+		vlUInt uiNextPowerOfTwo = this->NextPowerOfTwo(uiSlices);
+		LastError.SetFormatted("Invalid image depth %u. Depth must be a power of two (nearest powers are %u and %u).", uiSlices, uiNextPowerOfTwo >> 1, uiNextPowerOfTwo);
+
 		return vlFalse;
 	}
 
@@ -510,12 +495,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 			case RESIZE_BIGGEST_POWER2:
 			case RESIZE_SMALLEST_POWER2:
 				// Find the best width.
-				if(this->IsPowerOfTwo(uiWidth))
-				{
-					// Width already a power of 2.
-					uiNewWidth = uiWidth;
-				}
-				else
+				if(!this->IsPowerOfTwo(uiWidth))
 				{
 					// Find largest power of 2.
 					uiNewWidth = this->NextPowerOfTwo(uiWidth);
@@ -543,12 +523,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 				}
 
 				// Find the best height.
-				if(this->IsPowerOfTwo(uiHeight))
-				{
-					// Height already a power of 2.
-					uiNewHeight = uiHeight;
-				}
-				else
+				if(!this->IsPowerOfTwo(uiHeight))
 				{
 					// Find largest power of 2.
 					uiNewHeight = this->NextPowerOfTwo(uiHeight);
@@ -575,14 +550,22 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 					uiNewHeight = VTFCreateOptions.uiResizeClampHeight;
 				}
 				break;
+			case RESIZE_NEAREST_MULTIPLE4:
+				// Is not a multiple of 4.
+				if (!this->IsMultipleOfFour(uiWidth))
+				{
+					uiNewWidth = this->NearestMultipleOfFour(uiWidth);
+				}
+				if (!this->IsMultipleOfFour(uiHeight))
+				{
+					uiNewHeight = this->NearestMultipleOfFour(uiHeight);
+				}
+				break;
 			case RESIZE_SET:
 				uiNewWidth = VTFCreateOptions.uiResizeWidth;
 				uiNewHeight = VTFCreateOptions.uiResizeHeight;
 				break;
 			}
-
-			assert((uiNewWidth & (uiNewWidth - 1)) == 0);
-			assert((uiNewHeight & (uiNewHeight - 1)) == 0);
 
 			// Resize the input.
 			if(uiWidth != uiNewWidth || uiHeight != uiNewHeight)
@@ -660,7 +643,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 							if (!stbir_resize_uint8_generic(
 								pSource, this->Header->Width, this->Header->Height, 0,
 								temp.data(), usWidth, usHeight, 0,
-								4, 3, 0, STBIR_EDGE_CLAMP, STBIR_FILTER_BOX, VTFCreateOptions.bSRGB ? STBIR_COLORSPACE_SRGB : STBIR_COLORSPACE_LINEAR, NULL))
+								4, 3, 0, STBIR_EDGE_CLAMP, stbir_filter(VTFCreateOptions.MipmapFilter), VTFCreateOptions.bSRGB ? STBIR_COLORSPACE_SRGB : STBIR_COLORSPACE_LINEAR, NULL))
 							{
 								throw 0;
 							}
@@ -800,6 +783,27 @@ vlVoid CVTFFile::Destroy()
 vlBool CVTFFile::IsPowerOfTwo(vlUInt uiSize)
 {
 	return uiSize > 0 && (uiSize & (uiSize - 1)) == 0;
+}
+
+vlBool CVTFFile::IsMultipleOfFour(vlUInt uiSize)
+{
+	return uiSize > 0 && uiSize % 4 == 0;
+}
+
+vlUInt CVTFFile::NearestMultipleOfFour(vlUInt uiSize)
+{
+	if (uiSize == 0)
+	{
+		return 1;
+	}
+
+	if (this->IsMultipleOfFour(uiSize))
+	{
+		return uiSize;
+	}
+
+	vlUInt uiSizeMod = uiSize % 4;
+	return (0 < uiSizeMod < 3) ? uiSize - uiSizeMod : uiSize + 1;
 }
 
 vlUInt CVTFFile::NextPowerOfTwo(vlUInt uiSize)
@@ -1104,7 +1108,7 @@ vlBool CVTFFile::Load(IO::Readers::IReader *Reader, vlBool bHeaderOnly)
 
 //
 // Save()
-// Saves the curret image.  Basic format checking is done.
+// Saves the current image.  Basic format checking is done.
 //
 vlBool CVTFFile::Save(IO::Writers::IWriter *Writer) const
 {
@@ -1232,6 +1236,32 @@ vlUInt CVTFFile::GetMinorVersion() const
 	return this->Header->Version[1];
 }
 
+vlVoid CVTFFile::SetMinorVersion(vlUInt version)
+{
+	if(!this->IsLoaded())
+		return;
+
+	if (this->Header->Version[1] == version)
+		return;
+
+	vlUInt oldMinVersion = this->GetMinorVersion();
+	this->Header->Version[1] = version;
+
+	if(version >= 3 && oldMinVersion < 3)
+	{
+		// This is for VTFs that are below 7.3 as they don't have resources, so they need to be set and computed.
+		// Set resource count to 2 and set their type. First is thumbnail data, second is the image.
+		this->Header->ResourceCount = 2;
+		this->Header->Resources[0].Type = 1;
+		this->Header->Resources[1].Type = 48;
+		this->ComputeResources();
+	}
+	else {
+		// Correct the image when going from 7.3+ to 7.2 or lower.
+		this->ComputeResources();
+	}
+}
+
 //
 // ComputeResources()
 // Computes header VTF directory resources.
@@ -1250,9 +1280,8 @@ vlVoid CVTFFile::ComputeResources()
 	// Correct header size.
 	STATIC_ASSERT(VTF_MAJOR_VERSION == 7, "HeaderSize needs calculation for new major version.");
 	STATIC_ASSERT(VTF_MINOR_VERSION == 5, "HeaderSize needs calculation for new minor version.");
-	switch(this->Header->Version[0])
+	if(this->Header->Version[0] == 7)
 	{
-	case 7:
 		switch(this->Header->Version[1])
 		{
 		case 0:
@@ -1274,7 +1303,6 @@ vlVoid CVTFFile::ComputeResources()
 			this->Header->HeaderSize = sizeof(SVTFHeader_75_A) + this->Header->ResourceCount * sizeof(SVTFResource);
 			break;
 		}
-		break;
 	}
 
 	// Correct resource offsets.
@@ -3505,7 +3533,7 @@ vlBool CVTFFile::Resize(vlByte *lpSourceRGBA8888, vlByte *lpDestRGBA8888, vlUInt
 	if (!stbir_resize_uint8_generic(
 		lpSourceRGBA8888, uiSourceWidth, uiSourceHeight, 0,
 		lpDestRGBA8888, uiDestWidth, uiDestHeight, 0,
-		4, 3, 0, STBIR_EDGE_CLAMP, STBIR_FILTER_BOX, bSRGB ? STBIR_COLORSPACE_SRGB : STBIR_COLORSPACE_LINEAR, NULL))
+		4, 3, 0, STBIR_EDGE_CLAMP, stbir_filter(ResizeFilter), bSRGB ? STBIR_COLORSPACE_SRGB : STBIR_COLORSPACE_LINEAR, NULL))
 	{
 		LastError.Set("Error resizing image.");
 		return vlFalse;

@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
 			else if(stricmp(argv[i], "-srgb") == 0)
 			{
 				CreateOptions.bSRGB = vlTrue;
-				CreateOptions.uiFlags |= TEXTUREFLAGS_SRGB;
+				//CreateOptions.uiFlags |= TEXTUREFLAGS_SRGB; // Re-enable after properly implementing this.
 			}
 			else if(stricmp(argv[i], "-alphaformat") == 0)
 			{

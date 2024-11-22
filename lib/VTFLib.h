@@ -200,6 +200,7 @@ typedef enum tagVTFResizeMethod
     RESIZE_NEAREST_POWER2 = 0,
     RESIZE_BIGGEST_POWER2,
     RESIZE_SMALLEST_POWER2,
+	RESIZE_NEAREST_MULTIPLE4,
     RESIZE_SET,
 	RESIZE_COUNT
 } VTFResizeMethod;
@@ -415,6 +416,7 @@ VTFLIB_API vlUInt vlImageGetHasImage();
 
 VTFLIB_API vlUInt vlImageGetMajorVersion();
 VTFLIB_API vlUInt vlImageGetMinorVersion();
+VTFLIB_API vlUInt vlImageSetMinorVersion();
 VTFLIB_API vlUInt vlImageGetSize();
 
 VTFLIB_API vlUInt vlImageGetWidth();
@@ -775,6 +777,8 @@ namespace VTFLib
 	private:
 		vlBool IsPowerOfTwo(vlUInt uiSize);
 		vlUInt NextPowerOfTwo(vlUInt uiSize);
+		vlBool IsMultipleOfFour(vlUInt uiSize);
+		vlUInt NearestMultipleOfFour(vlUInt uiSize);
 
 		vlVoid ComputeResources();
 
@@ -786,6 +790,7 @@ namespace VTFLib
 
 		vlUInt GetMajorVersion() const;
 		vlUInt GetMinorVersion() const;
+		vlVoid SetMinorVersion(vlUInt version);
 		vlUInt GetSize() const;
 
 		vlUInt GetWidth() const;
