@@ -51,6 +51,8 @@ vlUInt uiParameterCount = 0;
 vlChar *lpParameters[MAX_ITEMS][2];					// VMT parameters.
 vlChar *lpExportFormat = "tga";						// Format extension for exporting VTF images.
 
+vlBool bHdr = vlFalse;
+
 void Pause();
 void Print(const vlChar *lpFormat, ...);
 void PrintUsage(const vlChar *lpError, ...);
@@ -529,6 +531,10 @@ int main(int argc, char* argv[])
 			{
 				bHelp = vlTrue;
 			}
+			else if (stricmp(argv[i], "-hdr") == 0)
+			{
+				bHdr = vlTrue;
+			}
 			else
 			{
 				PrintUsage("Unknown argument: %s.", argv[i]);
@@ -688,6 +694,7 @@ void PrintUsage(const vlChar *lpError, ...)
 	Print(" -exportformat <string>   (Convert VTF files to the format of this extension.)\n");
 	Print(" -silent                  (Silent mode.)\n");
 	Print(" -pause                   (Pause when done.)\n");
+	Print(" -hdr	                 (Indicate input is hdr.)\n");
 	Print(" -help                    (Display vtfcmd help.)\n");
 	Print("\n");
 	Print("Example vtfcmd usage:\n");
@@ -961,6 +968,13 @@ void ProcessFile(vlChar *lpInputFile)
 			return;
 		}
 
+		VTFImageFormat SourceFormat = vlImageGetFormat();
+		//Override source format if hdr is true and header format matches expected format.
+		if (bHdr && SourceFormat == IMAGE_FORMAT_BGRA8888)
+		{
+			SourceFormat = IMAGE_FORMAT_HDR_BGRA8888;
+		}
+
 		Print(" Information:\n");
 
 		// Display input file info.
@@ -977,7 +991,7 @@ void ProcessFile(vlChar *lpInputFile)
 		Print("  Bumpmap Scale: %.2f\n", vlImageGetBumpmapScale());
 		vlImageGetReflectivity(&sR, &sG, &sB);
 		Print("  Reflectivity: %.2f, %.2f, %.2f\n", sR, sG, sB);
-		Print("  Format: %s\n\n", vlImageGetImageFormatInfo(vlImageGetFormat())->lpName);
+		Print("  Format: %s\n\n", vlImageGetImageFormatInfo(SourceFormat)->lpName);
 		Print("  Resources: %u\n", vlImageGetResourceCount());
 
 		Print(" Creating texture:\n");
@@ -995,7 +1009,7 @@ void ProcessFile(vlChar *lpInputFile)
 		}
 
 		// Convert the .vtf.
-		if(!vlImageConvert(vlImageGetData(0, 0, 0, 0), lpImageData, vlImageGetWidth(), vlImageGetHeight(), vlImageGetFormat(), DestFormat))
+		if(!vlImageConvert(vlImageGetData(0, 0, 0, 0), lpImageData, vlImageGetWidth(), vlImageGetHeight(), SourceFormat, DestFormat))
 		{
 			free(lpImageData);
 
