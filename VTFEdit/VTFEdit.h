@@ -58,6 +58,7 @@ namespace VTFEdit
 		bool bFormRestoring;
 		System::Drawing::Point FormSaveLocation;
 		System::Drawing::Size FormSaveSize;
+		System::String^ FormVMTShader;
 		FormWindowState FormSaveWindowState;
 		int iFormSaveSidebarSplitPosition;
 
@@ -92,8 +93,8 @@ namespace VTFEdit
 			this->Options = gcnew CVTFOptions();
 			this->EditResources = gcnew CVTFEditResources();
 			this->VMTCreate = gcnew CVMTCreate();
-			this->BatchConvert = gcnew CBatchConvert(this->Options);
-			this->WADConvert = gcnew CWADConvert(this->Options);
+			this->BatchConvert = gcnew CBatchConvert(this->Options, this->VMTCreate);
+			this->WADConvert = gcnew CWADConvert(this->Options, this->VMTCreate);
 			this->About = gcnew CAbout();
 
 			this->hWndNewViewer = 0;
@@ -3923,7 +3924,7 @@ namespace VTFEdit
 
 					if(this->btnAutoCreateVMTFile->Checked)
 					{
-						CVMTFileUtility::CreateDefaultMaterial(this->FileName, "LightmappedGeneric");
+						CVMTFileUtility::CreateDefaultMaterial(this->FileName, this->FormVMTShader);
 					}
 
 					if(currentMinVersion != minVersion) {
@@ -5332,6 +5333,7 @@ namespace VTFEdit
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.AlphaFormat = ", Convert::ToInt32(this->Options->AlphaFormat).ToString()));
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.TextureType = ", this->Options->TextureType.ToString()));
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.sRGB = ", this->Options->sRGB.ToString()));
+				ConfigFile->WriteLine(System::String::Concat("VTFOptions.VMTShader = ", this->VMTCreate->cboShader->Text));
 
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.Resize = ", this->Options->ResizeImage.ToString()));
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.ResizeMethod = ", Convert::ToInt32(this->Options->ResizeMethod).ToString()));
@@ -5549,6 +5551,13 @@ namespace VTFEdit
 						else if(System::String::Compare(sArg, "VTFOptions.sRGB", true) == 0)
 						{
 							this->Options->sRGB = Convert::ToByte(sVal);
+						}
+						else if (System::String::Compare(sArg, "VTFOptions.VMTShader", true) == 0)
+						{
+							this->VMTCreate->cboShader->Text = sVal;
+							this->BatchConvert->VMTShader = sVal;
+							this->WADConvert->VMTShader = sVal;
+							this->FormVMTShader = sVal;
 						}
 
 						else if(System::String::Compare(sArg, "VTFOptions.Resize", true) == 0)

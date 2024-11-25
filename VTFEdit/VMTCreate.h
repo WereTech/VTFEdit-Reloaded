@@ -41,62 +41,62 @@ namespace VTFEdit
 	private: System::Windows::Forms::OpenFileDialog ^  dlgOpenVTFFile;
 	private: System::Windows::Forms::GroupBox ^  grpTextures;
 	private: System::Windows::Forms::Button ^  btnBaseTexture1;
-	private: System::Windows::Forms::TextBox ^  txtBaseTexture1;
+	public: System::Windows::Forms::TextBox ^  txtBaseTexture1;
 	private: System::Windows::Forms::Label ^  lblBaseTexture1;
 	private: System::Windows::Forms::TabControl ^  tabMain;
 	private: System::Windows::Forms::TabPage ^  tabTextures;
 	private: System::Windows::Forms::Button ^  btnBumpTexture1;
-	private: System::Windows::Forms::TextBox ^  txtBumpTexture1;
+	public: System::Windows::Forms::TextBox ^  txtBumpTexture1;
 	private: System::Windows::Forms::Label ^  lblBumpTexture1;
 	private: System::Windows::Forms::Button ^  btnEnviromentTexture;
-	private: System::Windows::Forms::TextBox ^  txtEnviromentTexture;
+	public: System::Windows::Forms::TextBox ^  txtEnviromentTexture;
 	private: System::Windows::Forms::Label ^  lblEnviromentTexture;
 	private: System::Windows::Forms::Button ^  btnEnviromentMaskTexture;
-	private: System::Windows::Forms::TextBox ^  txtEnviromentMaskTexture;
+	public: System::Windows::Forms::TextBox ^  txtEnviromentMaskTexture;
 	private: System::Windows::Forms::Label ^  lblEnviromentMaskTexture;
 	private: System::Windows::Forms::Button ^  btnDetailTexture;
-	private: System::Windows::Forms::TextBox ^  txtDetailTexture;
+	public: System::Windows::Forms::TextBox ^  txtDetailTexture;
 	private: System::Windows::Forms::Label ^  lblDetailTexture;
 	private: System::Windows::Forms::ToolTip ^  tipMain;
 	private: System::Windows::Forms::Button ^  btnClose;
-	private: System::Windows::Forms::Button ^  btnCreate;
+	public: System::Windows::Forms::Button ^  btnCreate;
 	private: System::Windows::Forms::Button ^  btnToolTexture;
-	private: System::Windows::Forms::TextBox ^  txtToolTexture;
+	public: System::Windows::Forms::TextBox ^  txtToolTexture;
 	private: System::Windows::Forms::Label ^  lblToolTexture;
 	private: System::Windows::Forms::Button ^  btnBumpTexture2;
-	private: System::Windows::Forms::TextBox ^  txtBumpTexture2;
+	public: System::Windows::Forms::TextBox ^  txtBumpTexture2;
 	private: System::Windows::Forms::Label ^  lblBumpTexture2;
 	private: System::Windows::Forms::Label ^  lblBaseTexture2;
 	private: System::Windows::Forms::Button ^  btnNormalTexture;
-	private: System::Windows::Forms::TextBox ^  txtNormalTexture;
+	public: System::Windows::Forms::TextBox ^  txtNormalTexture;
 	private: System::Windows::Forms::Label ^  lblNormalTexture;
 	private: System::Windows::Forms::Button ^  btnDuDvTexture;
-	private: System::Windows::Forms::TextBox ^  txtDuDvTexture;
+	public: System::Windows::Forms::TextBox ^  txtDuDvTexture;
 	private: System::Windows::Forms::Label ^  lblDuDvTexture;
 	private: System::Windows::Forms::Button ^  btnBaseTexture2;
-	private: System::Windows::Forms::TextBox ^  txtBaseTexture2;
+	public: System::Windows::Forms::TextBox ^  txtBaseTexture2;
 	private: System::Windows::Forms::TabPage ^  tabOptions;
 	private: System::Windows::Forms::GroupBox ^  grpOptions;
 	private: System::Windows::Forms::Button ^  btnClear;
-	private: System::Windows::Forms::SaveFileDialog ^  dlgSaveVMTFile;
+	public: System::Windows::Forms::SaveFileDialog ^  dlgSaveVMTFile;
 	private: System::Windows::Forms::Label ^  lblShader;
-	private: System::Windows::Forms::ComboBox ^  cboShader;
-	private: System::Windows::Forms::ComboBox ^  cboSurface1;
+	public: System::Windows::Forms::ComboBox ^  cboShader;
+	public: System::Windows::Forms::ComboBox ^  cboSurface1;
 	private: System::Windows::Forms::Label ^  lblSurface1;
-	private: System::Windows::Forms::ComboBox ^  cboSurface2;
+	public: System::Windows::Forms::ComboBox ^  cboSurface2;
 	private: System::Windows::Forms::Label ^  lblSurface2;
 	private: System::Windows::Forms::Label ^  lblKeywords;
-	private: System::Windows::Forms::TextBox ^  txtKeywords;
-	private: System::Windows::Forms::CheckBox ^  chkTranslucent;
-	private: System::Windows::Forms::CheckBox ^  chkAdditive;
-	private: System::Windows::Forms::CheckBox ^  chkNoCull;
-	private: System::Windows::Forms::CheckBox ^  chkAlphaTest;
-	private: System::Windows::Forms::CheckBox ^  chkNoLOD;
-	private: System::Windows::Forms::CheckBox ^  chkNoDecal;
-	private: System::Windows::Forms::CheckBox ^  chkVertexColor;
-	private: System::Windows::Forms::CheckBox ^  chkVertexAlpha;
-	private: System::Windows::Forms::CheckBox^ chkModel;
-	private: System::Windows::Forms::CheckBox^ chkDecal;
+	public: System::Windows::Forms::TextBox ^  txtKeywords;
+	public: System::Windows::Forms::CheckBox ^  chkTranslucent;
+	public: System::Windows::Forms::CheckBox ^  chkAdditive;
+	public: System::Windows::Forms::CheckBox ^  chkNoCull;
+	public: System::Windows::Forms::CheckBox ^  chkAlphaTest;
+	public: System::Windows::Forms::CheckBox ^  chkNoLOD;
+	public: System::Windows::Forms::CheckBox ^  chkNoDecal;
+	public: System::Windows::Forms::CheckBox ^  chkVertexColor;
+	public: System::Windows::Forms::CheckBox ^  chkVertexAlpha;
+	public: System::Windows::Forms::CheckBox^ chkModel;
+	public: System::Windows::Forms::CheckBox^ chkDecal;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -870,7 +870,7 @@ namespace VTFEdit
 			this->txtNormalTexture->Clear();
 			this->txtDuDvTexture->Clear();
 
-			this->cboShader->Text = "LightmappedGeneric";
+			//this->cboShader->Text = "LightmappedGeneric";
 			this->cboSurface1->Text = "";
 			this->cboSurface2->Text = "";
 
@@ -957,7 +957,7 @@ namespace VTFEdit
 			this->Clear();
 		}
 
-		private: System::Void AddVMTStringNode(VTFLib::CVMTFile &VMTFile, System::String ^sName, System::String ^sValue)
+		public: System::Void AddVMTStringNode(VTFLib::CVMTFile &VMTFile, System::String ^sName, System::String ^sValue)
 		{
 			if(sValue->Length == 0)
 				return;
@@ -983,7 +983,7 @@ namespace VTFEdit
 			System::Runtime::InteropServices::Marshal::FreeHGlobal((IntPtr)cName);
 		}
 
-		private: System::Void AddVMTBooleanNode(VTFLib::CVMTFile &VMTFile, System::String ^sName, bool bValue, bool bDefault)
+		public: System::Void AddVMTBooleanNode(VTFLib::CVMTFile &VMTFile, System::String ^sName, bool bValue, bool bDefault)
 		{
 			if(bValue == bDefault)
 				return;
@@ -993,7 +993,7 @@ namespace VTFEdit
 			System::Runtime::InteropServices::Marshal::FreeHGlobal((IntPtr)cName);
 		}
 
-		private: System::Void btnCreate_Click(System::Object ^  sender, System::EventArgs ^  e)
+		public: System::Void btnCreate_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
 			System::String ^sVMTFile = this->txtBaseTexture1->Text;
 
