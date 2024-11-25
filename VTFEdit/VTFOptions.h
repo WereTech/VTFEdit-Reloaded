@@ -382,6 +382,7 @@ namespace VTFEdit
 			// 
 			// btnOK
 			// 
+			this->btnOK->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
 			this->btnOK->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->btnOK->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
 			this->btnOK->Location = System::Drawing::Point(176, 387);
@@ -393,6 +394,7 @@ namespace VTFEdit
 			// 
 			// btnCancel
 			// 
+			this->btnCancel->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
 			this->btnCancel->DialogResult = System::Windows::Forms::DialogResult::Cancel;
 			this->btnCancel->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->btnCancel->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
@@ -564,7 +566,7 @@ namespace VTFEdit
 				L"1", L"2", L"4", L"8", L"16", L"32", L"64",
 					L"128", L"256", L"512", L"1024", L"2048", L"4096"
 			});
-			this->cboMaximumHeight->Location = System::Drawing::Point(76, 122);
+			this->cboMaximumHeight->Location = System::Drawing::Point(76, 120);
 			this->cboMaximumHeight->Name = L"cboMaximumHeight";
 			this->cboMaximumHeight->Size = System::Drawing::Size(125, 21);
 			this->cboMaximumHeight->TabIndex = 11;
@@ -574,7 +576,7 @@ namespace VTFEdit
 			// 
 			this->lblMaximumHeight->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->lblMaximumHeight->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
-			this->lblMaximumHeight->Location = System::Drawing::Point(6, 126);
+			this->lblMaximumHeight->Location = System::Drawing::Point(6, 124);
 			this->lblMaximumHeight->Name = L"lblMaximumHeight";
 			this->lblMaximumHeight->Size = System::Drawing::Size(66, 13);
 			this->lblMaximumHeight->TabIndex = 10;
@@ -588,7 +590,7 @@ namespace VTFEdit
 				L"1", L"2", L"4", L"8", L"16", L"32", L"64",
 					L"128", L"256", L"512", L"1024", L"2048", L"4096"
 			});
-			this->cboMaximumWidth->Location = System::Drawing::Point(76, 103);
+			this->cboMaximumWidth->Location = System::Drawing::Point(76, 101);
 			this->cboMaximumWidth->Name = L"cboMaximumWidth";
 			this->cboMaximumWidth->Size = System::Drawing::Size(125, 21);
 			this->cboMaximumWidth->TabIndex = 9;
@@ -598,7 +600,7 @@ namespace VTFEdit
 			// 
 			this->lblMaximumWidth->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->lblMaximumWidth->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
-			this->lblMaximumWidth->Location = System::Drawing::Point(6, 107);
+			this->lblMaximumWidth->Location = System::Drawing::Point(6, 105);
 			this->lblMaximumWidth->Name = L"lblMaximumWidth";
 			this->lblMaximumWidth->Size = System::Drawing::Size(66, 13);
 			this->lblMaximumWidth->TabIndex = 8;

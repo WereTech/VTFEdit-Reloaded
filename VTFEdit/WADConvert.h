@@ -136,7 +136,7 @@ namespace VTFEdit
 			this->chkCreateVMTFiles->Checked = true;
 			this->chkCreateVMTFiles->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->chkCreateVMTFiles->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->chkCreateVMTFiles->Location = System::Drawing::Point(80, 53);
+			this->chkCreateVMTFiles->Location = System::Drawing::Point(80, 54);
 			this->chkCreateVMTFiles->Name = L"chkCreateVMTFiles";
 			this->chkCreateVMTFiles->Size = System::Drawing::Size(101, 19);
 			this->chkCreateVMTFiles->TabIndex = 6;
@@ -147,7 +147,7 @@ namespace VTFEdit
 			// 
 			this->btnOutputFolderBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->btnOutputFolderBrowse->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->btnOutputFolderBrowse->Location = System::Drawing::Point(346, 31);
+			this->btnOutputFolderBrowse->Location = System::Drawing::Point(346, 33);
 			this->btnOutputFolderBrowse->Name = L"btnOutputFolderBrowse";
 			this->btnOutputFolderBrowse->Size = System::Drawing::Size(15, 16);
 			this->btnOutputFolderBrowse->TabIndex = 5;
@@ -158,7 +158,7 @@ namespace VTFEdit
 			// 
 			this->txtOutputFolder->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->txtOutputFolder->Location = System::Drawing::Point(80, 31);
+			this->txtOutputFolder->Location = System::Drawing::Point(80, 33);
 			this->txtOutputFolder->Name = L"txtOutputFolder";
 			this->txtOutputFolder->Size = System::Drawing::Size(260, 20);
 			this->txtOutputFolder->TabIndex = 4;
@@ -167,7 +167,7 @@ namespace VTFEdit
 			// lblOutputFolder
 			// 
 			this->lblOutputFolder->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblOutputFolder->Location = System::Drawing::Point(6, 34);
+			this->lblOutputFolder->Location = System::Drawing::Point(6, 36);
 			this->lblOutputFolder->Name = L"lblOutputFolder";
 			this->lblOutputFolder->Size = System::Drawing::Size(75, 20);
 			this->lblOutputFolder->TabIndex = 3;
@@ -177,7 +177,7 @@ namespace VTFEdit
 			// 
 			this->btnWADFileBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->btnWADFileBrowse->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->btnWADFileBrowse->Location = System::Drawing::Point(346, 12);
+			this->btnWADFileBrowse->Location = System::Drawing::Point(346, 14);
 			this->btnWADFileBrowse->Name = L"btnWADFileBrowse";
 			this->btnWADFileBrowse->Size = System::Drawing::Size(15, 17);
 			this->btnWADFileBrowse->TabIndex = 2;
@@ -188,7 +188,7 @@ namespace VTFEdit
 			// 
 			this->txtWADFile->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->txtWADFile->Location = System::Drawing::Point(80, 12);
+			this->txtWADFile->Location = System::Drawing::Point(80, 14);
 			this->txtWADFile->Name = L"txtWADFile";
 			this->txtWADFile->Size = System::Drawing::Size(260, 20);
 			this->txtWADFile->TabIndex = 1;
@@ -198,7 +198,7 @@ namespace VTFEdit
 			// lblWADFile
 			// 
 			this->lblWADFile->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblWADFile->Location = System::Drawing::Point(6, 15);
+			this->lblWADFile->Location = System::Drawing::Point(6, 17);
 			this->lblWADFile->Name = L"lblWADFile";
 			this->lblWADFile->Size = System::Drawing::Size(60, 19);
 			this->lblWADFile->TabIndex = 0;
@@ -305,6 +305,7 @@ namespace VTFEdit
 			// 
 			// btnVMTOptions
 			// 
+			this->btnVMTOptions->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 			this->btnVMTOptions->Location = System::Drawing::Point(86, 334);
 			this->btnVMTOptions->Name = L"btnVMTOptions";
 			this->btnVMTOptions->Size = System::Drawing::Size(80, 22);

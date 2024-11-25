@@ -386,6 +386,7 @@ namespace VTFEdit
 			// 
 			// btnVMTOptions
 			// 
+			this->btnVMTOptions->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 			this->btnVMTOptions->Location = System::Drawing::Point(84, 334);
 			this->btnVMTOptions->Name = L"btnVMTOptions";
 			this->btnVMTOptions->Size = System::Drawing::Size(80, 22);
