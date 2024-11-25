@@ -120,6 +120,8 @@ namespace VTFEdit
 	private: System::Windows::Forms::Label^ lblInformationModification;
 	private: System::Windows::Forms::Label^ lblInformationVersion;
 	private: System::Windows::Forms::CheckBox^ chkSrgb;
+	private: System::Windows::Forms::TabPage^ tabFlags;
+	public: System::Windows::Forms::CheckedListBox^ lstFlags;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -210,6 +212,8 @@ namespace VTFEdit
 			this->lblLODControlClampV = (gcnew System::Windows::Forms::Label());
 			this->numLODControlClampU = (gcnew System::Windows::Forms::NumericUpDown());
 			this->lblLODControlClampU = (gcnew System::Windows::Forms::Label());
+			this->tabFlags = (gcnew System::Windows::Forms::TabPage());
+			this->lstFlags = (gcnew System::Windows::Forms::CheckedListBox());
 			this->grpMiscellaneous->SuspendLayout();
 			this->grpGeneral->SuspendLayout();
 			this->grpMipmaps->SuspendLayout();
@@ -232,6 +236,7 @@ namespace VTFEdit
 			this->grpLODControlResource->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numLODControlClampV))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numLODControlClampU))->BeginInit();
+			this->tabFlags->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// grpMiscellaneous
@@ -427,10 +432,8 @@ namespace VTFEdit
 			this->chkSrgb->Size = System::Drawing::Size(115, 17);
 			this->chkSrgb->TabIndex = 6;
 			this->chkSrgb->Text = L"sRGB Color Space";
+			this->tipMain->SetToolTip(this->chkSrgb, resources->GetString(L"chkSrgb.ToolTip"));
 			this->chkSrgb->UseVisualStyleBackColor = true;
-			this->tipMain->SetToolTip(this->chkSrgb, L"Whether or not to treat the input image as sRGB instead of Linear when generating "
-				L"mipmaps or resizing. \r\nTurn this off when creating textures that are not meant to be viewed directly, such as normal "
-				L"maps and specular masks. \r\n(aka turn this off for pretty much anything that's not a diffuse/basetexture).");
 			// 
 			// cboAlphaFormat
 			// 
@@ -747,6 +750,7 @@ namespace VTFEdit
 			this->tabOptions->Controls->Add(this->tabGeneral);
 			this->tabOptions->Controls->Add(this->tabAdvanced);
 			this->tabOptions->Controls->Add(this->tabResources);
+			this->tabOptions->Controls->Add(this->tabFlags);
 			this->tabOptions->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
 			this->tabOptions->Location = System::Drawing::Point(6, 6);
 			this->tabOptions->Name = L"tabOptions";
@@ -1050,6 +1054,36 @@ namespace VTFEdit
 			this->lblLODControlClampU->TabIndex = 1;
 			this->lblLODControlClampU->Text = L"Clamp U:";
 			// 
+			// tabFlags
+			// 
+			this->tabFlags->BackColor = System::Drawing::SystemColors::Control;
+			this->tabFlags->Controls->Add(this->lstFlags);
+			this->tabFlags->Location = System::Drawing::Point(4, 22);
+			this->tabFlags->Name = L"tabFlags";
+			this->tabFlags->Size = System::Drawing::Size(230, 350);
+			this->tabFlags->TabIndex = 3;
+			this->tabFlags->Text = L"Flags";
+			// 
+			// lstFlags
+			// 
+			this->lstFlags->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				| System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->lstFlags->CheckOnClick = true;
+			this->lstFlags->ForeColor = System::Drawing::SystemColors::WindowText;
+			this->lstFlags->HorizontalScrollbar = true;
+			this->lstFlags->Items->AddRange(gcnew cli::array< System::Object^  >(22) {
+				L"Point Sample", L"Trilinear", L"Clamp S", L"Clamp T",
+					L"Anisotropic", L"Hint DXT5", L"SRGB", L"Normal Map", L"No Mipmap", L"No Level Of Detail", L"No Minimum Mipmap", L"Procedural",
+					L"Environment Map", L"Render Target", L"Depth Render Target", L"No Debug Override", L"Single Copy", L"No Depth Buffer", L"Clamp U",
+					L"Vertex Texture", L"SSBump", L"Clamp Border"
+			});
+			this->lstFlags->Location = System::Drawing::Point(9, 8);
+			this->lstFlags->Name = L"lstFlags";
+			this->lstFlags->Size = System::Drawing::Size(212, 334);
+			this->lstFlags->TabIndex = 4;
+			this->lstFlags->TabStop = false;
+			// 
 			// CVTFOptions
 			// 
 			this->AcceptButton = this->btnOK;
@@ -1093,6 +1127,7 @@ namespace VTFEdit
 			this->grpLODControlResource->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numLODControlClampV))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numLODControlClampU))->EndInit();
+			this->tabFlags->ResumeLayout(false);
 			this->ResumeLayout(false);
 
 		}

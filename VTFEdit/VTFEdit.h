@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "About.h"
 #include "VTFOptions.h"
+#include "VTFResources.h"
 #include "VMTCreate.h"
 #include "BatchConvert.h"
 #include "WADConvert.h"
@@ -62,10 +63,12 @@ namespace VTFEdit
 
 		CDirectoryItemInfoManager ^DirectoryItemInfoManager;
 		CVTFOptions ^Options;
+		CVTFEditResources ^EditResources;
 		CVMTCreate ^VMTCreate;
 		CBatchConvert ^BatchConvert;
 		CWADConvert ^WADConvert;
 		CAbout ^About;
+	private: System::Windows::Forms::Button^ btnEditResources;
 
 		HWND hWndNewViewer;
 
@@ -87,6 +90,7 @@ namespace VTFEdit
 
 			this->DirectoryItemInfoManager = gcnew CDirectoryItemInfoManager();
 			this->Options = gcnew CVTFOptions();
+			this->EditResources = gcnew CVTFEditResources();
 			this->VMTCreate = gcnew CVMTCreate();
 			this->BatchConvert = gcnew CBatchConvert(this->Options);
 			this->WADConvert = gcnew CWADConvert(this->Options);
@@ -414,6 +418,7 @@ namespace VTFEdit
 			this->lblFileSizeLabel = (gcnew System::Windows::Forms::Label());
 			this->lblFileVersionLabel = (gcnew System::Windows::Forms::Label());
 			this->tabResources = (gcnew System::Windows::Forms::TabPage());
+			this->btnEditResources = (gcnew System::Windows::Forms::Button());
 			this->grpResources = (gcnew System::Windows::Forms::GroupBox());
 			this->treResources = (gcnew System::Windows::Forms::TreeView());
 			this->grpResourceInfo = (gcnew System::Windows::Forms::GroupBox());
@@ -1589,6 +1594,7 @@ namespace VTFEdit
 			// 
 			// tabResources
 			// 
+			this->tabResources->Controls->Add(this->btnEditResources);
 			this->tabResources->Controls->Add(this->grpResources);
 			this->tabResources->Controls->Add(this->grpResourceInfo);
 			this->tabResources->Location = System::Drawing::Point(4, 22);
@@ -1597,6 +1603,16 @@ namespace VTFEdit
 			this->tabResources->TabIndex = 3;
 			this->tabResources->Text = L"Resources";
 			// 
+			// btnEditResources
+			// 
+			this->btnEditResources->Location = System::Drawing::Point(7, 54);
+			this->btnEditResources->Name = L"btnEditResources";
+			this->btnEditResources->Size = System::Drawing::Size(198, 23);
+			this->btnEditResources->TabIndex = 3;
+			this->btnEditResources->Text = L"Edit Resources";
+			this->btnEditResources->UseVisualStyleBackColor = true;
+			this->btnEditResources->Click += gcnew System::EventHandler(this, &CVTFEdit::btnEditResources_Click);
+			// 
 			// grpResources
 			// 
 			this->grpResources->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
@@ -1604,9 +1620,9 @@ namespace VTFEdit
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->grpResources->Controls->Add(this->treResources);
 			this->grpResources->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->grpResources->Location = System::Drawing::Point(7, 56);
+			this->grpResources->Location = System::Drawing::Point(7, 80);
 			this->grpResources->Name = L"grpResources";
-			this->grpResources->Size = System::Drawing::Size(198, 423);
+			this->grpResources->Size = System::Drawing::Size(198, 399);
 			this->grpResources->TabIndex = 2;
 			this->grpResources->TabStop = false;
 			this->grpResources->Text = L"Resources:";
@@ -1618,7 +1634,7 @@ namespace VTFEdit
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->treResources->Location = System::Drawing::Point(7, 19);
 			this->treResources->Name = L"treResources";
-			this->treResources->Size = System::Drawing::Size(186, 392);
+			this->treResources->Size = System::Drawing::Size(186, 368);
 			this->treResources->TabIndex = 0;
 			// 
 			// grpResourceInfo
@@ -1898,6 +1914,7 @@ namespace VTFEdit
 					this->toolStripMask, this->toolStripTile, this->toolStripSeparator4, this->toolStripZoomIn, this->toolStripZoomOut
 			});
 			this->toolStripView->Location = System::Drawing::Point(0, 0);
+			this->toolStripView->MaximumSize = System::Drawing::Size(0, 43);
 			this->toolStripView->Name = L"toolStripView";
 			this->toolStripView->Padding = System::Windows::Forms::Padding(0);
 			this->toolStripView->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
@@ -2199,7 +2216,7 @@ namespace VTFEdit
 			this->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8));
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->Menu = this->mnuMain;
-			this->MinimumSize = System::Drawing::Size(600, 600);
+			this->MinimumSize = System::Drawing::Size(690, 600);
 			this->Name = L"CVTFEdit";
 			this->Text = L"VTFEdit Reloaded";
 			this->Closing += gcnew System::ComponentModel::CancelEventHandler(this, &CVTFEdit::CVTFEdit_Closing);
@@ -3658,7 +3675,7 @@ namespace VTFEdit
 				this->tabSidebar->TabPages->Add(this->tabResources);
 			}
 
-			this->tabSidebar->SelectedTab = this->tabImage;
+			this->tabSidebar->SelectedIndex = this->tabSidebar->SelectedIndex == 0 ? 0 : this->tabSidebar->SelectedIndex;
 		}
 
 		private: void SetInformation(System::Windows::Forms::TreeNode ^pNode, VTFLib::Nodes::CVMTGroupNode *pVMTNode)
@@ -3912,7 +3929,6 @@ namespace VTFEdit
 					if(currentMinVersion != minVersion) {
 						// Resources may need to be reloaded so the file won't need to be opened again to see the changes.
 						this->SetVTFFile(VTFFile);
-						this->tabSidebar->SelectedIndex = 2;
 
 						// If the minor version has been changed, the size of the file will be different.
 						this->lblFileSize->Text = System::String::Concat(((float)VTFFile->GetSize() / 1024.0f).ToString("#,##0.000"), " KB");
@@ -4073,6 +4089,41 @@ namespace VTFEdit
 				// Create the .vtf file.
 				if(VTFFile->Create(uiWidth, uiHeight, uiFrames, uiFaces, uiSlices, lpImageData, VTFCreateOptions) != vlFalse && CVTFFileUtility::CreateResources(Options, VTFFile))
 				{
+					VTFFile->SetFlags(0);
+					for (vlUInt i = 0, j = 0x00000001; i < (vlUInt)this->Options->lstFlags->Items->Count; i++, j <<= 1)
+					{
+						if (this->Options->lstFlags->GetItemChecked(i))
+						{
+							// The flags list only includes flags that can be changed by the user.
+							switch (i)
+							{
+							case 0: VTFFile->SetFlag(TEXTUREFLAGS_POINTSAMPLE, true); break;
+							case 1: VTFFile->SetFlag(TEXTUREFLAGS_TRILINEAR, true); break;
+							case 2: VTFFile->SetFlag(TEXTUREFLAGS_CLAMPS, true); break;
+							case 3: VTFFile->SetFlag(TEXTUREFLAGS_CLAMPT, true); break;
+							case 4: VTFFile->SetFlag(TEXTUREFLAGS_ANISOTROPIC, true); break;
+							case 5: VTFFile->SetFlag(TEXTUREFLAGS_HINT_DXT5, true); break;
+							case 6: VTFFile->SetFlag(TEXTUREFLAGS_SRGB, true); break;
+							case 7: VTFFile->SetFlag(TEXTUREFLAGS_NORMAL, true); break;
+							case 8: VTFFile->SetFlag(TEXTUREFLAGS_NOMIP, true); break;
+							case 9: VTFFile->SetFlag(TEXTUREFLAGS_NOLOD, true); break;
+							case 10: VTFFile->SetFlag(TEXTUREFLAGS_MINMIP, true); break;
+							case 11: VTFFile->SetFlag(TEXTUREFLAGS_PROCEDURAL, true); break;
+							case 12: VTFFile->SetFlag(TEXTUREFLAGS_ENVMAP, true); break;
+							case 13: VTFFile->SetFlag(TEXTUREFLAGS_RENDERTARGET, true); break;
+							case 14: VTFFile->SetFlag(TEXTUREFLAGS_DEPTHRENDERTARGET, true); break;
+							case 15: VTFFile->SetFlag(TEXTUREFLAGS_NODEBUGOVERRIDE, true); break;
+							case 16: VTFFile->SetFlag(TEXTUREFLAGS_NODEPTHBUFFER, true); break;
+							case 17: VTFFile->SetFlag(TEXTUREFLAGS_CLAMPU, true); break;
+							case 18: VTFFile->SetFlag(TEXTUREFLAGS_VERTEXTEXTURE, true); break;
+							case 19: VTFFile->SetFlag(TEXTUREFLAGS_SSBUMP, true); break;
+							case 20: VTFFile->SetFlag(TEXTUREFLAGS_BORDER, true); break;
+							default:
+								break;
+							}
+						}
+					}
+
 					this->SetVTFFile(VTFFile);
 
 					this->FileName = nullptr;
@@ -6001,14 +6052,89 @@ namespace VTFEdit
 		}
 
 		private: System::Void btnEditResources_Click(System::Object^ sender, System::EventArgs^ e) {
-			if (this->Options->ShowDialog() != System::Windows::Forms::DialogResult::OK)
+			// Iterate through the TreeView nodes to find the currently loaded resources if there are any.
+			for (auto i = 0; i < treResources->Nodes->Count; i++)
+			{
+				// Set the check boxes for edit resources dialog if either of these two were found.
+				System::Windows::Forms::TreeNode^ mainNode = treResources->Nodes[i];
+				if(mainNode->Text->Contains("LOD"))
+					EditResources->chkCreateLODControlResource->Checked = true;
+				else if(mainNode->Text->Contains("Information"))
+					EditResources->chkCreateInformationResource->Checked = true;
+
+				System::Windows::Forms::TreeNode^ currentNode = treResources->Nodes[i]->FirstNode;
+				System::Windows::Forms::TreeNode^ lastNode = treResources->Nodes[i]->LastNode;
+
+				if (lastNode->Text->Contains("Clamp"))
+					lastNode->Text = "Clamp V: " + EditResources->LODControlClampV.ToString();
+
+
+				while (currentNode->NextNode != nullptr)
+				{
+					//currentNode->Text = "next"; // note to self, this is two steps down for Information
+					if (currentNode->Text == "Author")
+						EditResources->InformationAuthor = currentNode->FirstNode->Text;
+					else if(currentNode->Text == "Contact")
+						EditResources->InformationContact = currentNode->FirstNode->Text;
+					else if (currentNode->Text == "Version")
+						EditResources->InformationVersion = currentNode->FirstNode->Text;
+					else if (currentNode->Text == "Modification")
+						EditResources->InformationModification = currentNode->FirstNode->Text;
+					else if (currentNode->Text == "Description")
+						EditResources->InformationDescription = currentNode->FirstNode->Text;
+					else if (currentNode->Text == "Comments")
+						EditResources->InformationComments = currentNode->FirstNode->Text;
+					
+					currentNode = currentNode->NextNode;
+				}
+			}
+
+			// Find the center of the main window to make this dialog box be centered on it.
+			this->EditResources->Location = Point(
+				(this->FormSaveLocation.X + (this->FormSaveSize.Width / 2)) - 132,
+				(this->FormSaveLocation.Y + (this->FormSaveSize.Height / 2)) - 179
+			);
+			// Basic check if the Options box's location will be outside of the monitor's bounds.
+			if (this->EditResources->Location.X < 0 || this->EditResources->Location.Y < 0)
+			{
+				this->EditResources->Location = Point(0, 0);
+			}
+			if (this->EditResources->ShowDialog() != System::Windows::Forms::DialogResult::OK)
 			{
 				return;
 			}
+			
+			// Doing this the lazy way. I want a different dialog that's only the Resources tab from Options dalog.
+			CVTFOptions^ tmpOptions = Options;
 
-			CVTFFileUtility::CreateResources(Options, VTFFile);
+			//vlByte lpData[65536]{};
+			if (EditResources->CreateLODControlResource)
+			{
+				tmpOptions->CreateLODControlResource = true;
+				tmpOptions->LODControlClampU = EditResources->LODControlClampU;
+				tmpOptions->LODControlClampV = EditResources->LODControlClampV;
+			}
+			else {
+				tmpOptions->CreateLODControlResource = false;
+			}
 
-			this->SetVTFFile(VTFFile);
+			if (EditResources->CreateInformationResource)
+			{
+				tmpOptions->CreateInformationResource = true;
+				tmpOptions->InformationAuthor = EditResources->InformationAuthor;
+				tmpOptions->InformationComments = EditResources->InformationComments;
+				tmpOptions->InformationContact = EditResources->InformationContact;
+				tmpOptions->InformationDescription = EditResources->InformationDescription;
+				tmpOptions->InformationModification = EditResources->InformationModification;
+				tmpOptions->InformationVersion = EditResources->InformationVersion;
+			}
+			else {
+				tmpOptions->CreateInformationResource = false;
+			}
+
+			CVTFFileUtility::CreateResources(tmpOptions, this->VTFFile);
+
+			this->SetVTFFile(this->VTFFile);
 		}
 
 		private: System::Void toolStripZoomIn_Click(System::Object^ sender, System::EventArgs^ e) {

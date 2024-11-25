@@ -94,6 +94,9 @@ namespace VTFEdit
 
 				bResult &= pVTFFile->SetResourceData(VTF_RSRC_TEXTURE_LOD_SETTINGS, sizeof(SVTFTextureLODControlResource), &LODControlResource) != vlFalse;
 			}
+			else {
+				bResult &= pVTFFile->SetResourceData(VTF_RSRC_TEXTURE_LOD_SETTINGS, 0, 0) != vlFalse;
+			}
 
 			if(Options->CreateInformationResource)
 			{
@@ -140,6 +143,9 @@ namespace VTFEdit
 				}
 
 				delete pVMTFile;
+			}
+			else {
+				bResult &= pVTFFile->SetResourceData(VTF_RSRC_KEY_VALUE_DATA, 0, 0) != vlFalse;
 			}
 
 			return bResult;

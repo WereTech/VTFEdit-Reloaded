@@ -150,6 +150,7 @@ copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
     <ClCompile Include="..\..\..\VTFEdit\VMTCreate.cpp" />
     <ClCompile Include="..\..\..\VTFEdit\VTFEdit.cpp" />
     <ClCompile Include="..\..\..\VTFEdit\VTFOptions.cpp" />
+    <ClCompile Include="..\..\..\VTFEdit\VTFResources.cpp" />
     <ClCompile Include="..\..\..\VTFEdit\WADConvert.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +173,9 @@ copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
     </ClInclude>
     <ClInclude Include="..\..\..\VTFEdit\VTFFileUtility.h" />
     <ClInclude Include="..\..\..\VTFEdit\VTFOptions.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\..\VTFEdit\VTFResources.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="..\..\..\VTFEdit\WADConvert.h">
@@ -209,6 +213,9 @@ copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
       <DependentUpon>..\..\..\VTFEdit\VTFOptions.h</DependentUpon>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VTFEdit.CVTFOptions.resources</LogicalName>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VTFEdit.CVTFOptions.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\VTFEdit\VTFResources.resx">
+      <DependentUpon>..\..\..\VTFEdit\VTFResources.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\..\VTFEdit\WADConvert.resX">
       <DependentUpon>..\..\..\VTFEdit\WADConvert.h</DependentUpon>

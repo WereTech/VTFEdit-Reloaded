@@ -645,6 +645,41 @@ namespace VTFEdit
 										}
 									}
 
+									VTFFile.SetFlags(0);
+									for (vlUInt i = 0, j = 0x00000001; i < (vlUInt)this->Options->lstFlags->Items->Count; i++, j <<= 1)
+									{
+										if (this->Options->lstFlags->GetItemChecked(i))
+										{
+											// The flags list only includes flags that can be changed by the user.
+											switch (i)
+											{
+											case 0: VTFFile.SetFlag(TEXTUREFLAGS_POINTSAMPLE, true); break;
+											case 1: VTFFile.SetFlag(TEXTUREFLAGS_TRILINEAR, true); break;
+											case 2: VTFFile.SetFlag(TEXTUREFLAGS_CLAMPS, true); break;
+											case 3: VTFFile.SetFlag(TEXTUREFLAGS_CLAMPT, true); break;
+											case 4: VTFFile.SetFlag(TEXTUREFLAGS_ANISOTROPIC, true); break;
+											case 5: VTFFile.SetFlag(TEXTUREFLAGS_HINT_DXT5, true); break;
+											case 6: VTFFile.SetFlag(TEXTUREFLAGS_SRGB, true); break;
+											case 7: VTFFile.SetFlag(TEXTUREFLAGS_NORMAL, true); break;
+											case 8: VTFFile.SetFlag(TEXTUREFLAGS_NOMIP, true); break;
+											case 9: VTFFile.SetFlag(TEXTUREFLAGS_NOLOD, true); break;
+											case 10: VTFFile.SetFlag(TEXTUREFLAGS_MINMIP, true); break;
+											case 11: VTFFile.SetFlag(TEXTUREFLAGS_PROCEDURAL, true); break;
+											case 12: VTFFile.SetFlag(TEXTUREFLAGS_ENVMAP, true); break;
+											case 13: VTFFile.SetFlag(TEXTUREFLAGS_RENDERTARGET, true); break;
+											case 14: VTFFile.SetFlag(TEXTUREFLAGS_DEPTHRENDERTARGET, true); break;
+											case 15: VTFFile.SetFlag(TEXTUREFLAGS_NODEBUGOVERRIDE, true); break;
+											case 16: VTFFile.SetFlag(TEXTUREFLAGS_NODEPTHBUFFER, true); break;
+											case 17: VTFFile.SetFlag(TEXTUREFLAGS_CLAMPU, true); break;
+											case 18: VTFFile.SetFlag(TEXTUREFLAGS_VERTEXTEXTURE, true); break;
+											case 19: VTFFile.SetFlag(TEXTUREFLAGS_SSBUMP, true); break;
+											case 20: VTFFile.SetFlag(TEXTUREFLAGS_BORDER, true); break;
+											default:
+												break;
+											}
+										}
+									}
+
 									char *cVTFFile = (char *)(System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(sVTFFile)).ToPointer();
 									if(VTFFile.Save(cVTFFile))
 									{
@@ -796,13 +831,14 @@ namespace VTFEdit
 			this->txtLog->AppendText(String::Concat(sString, "\n"));
 			this->txtLog->Refresh();
 		}
-	private: System::Void txtToVTFFilter_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-	}
-private: System::Void txtFromVTFFilter_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-	}
-private: System::Void txtOutputFolder_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-	}
-private: System::Void cboFromVTFFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
-}
+
+		private: System::Void txtToVTFFilter_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+		}
+		private: System::Void txtFromVTFFilter_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+			}
+		private: System::Void txtOutputFolder_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+			}
+		private: System::Void cboFromVTFFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
+		}
 };
 }
