@@ -152,7 +152,8 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->AutoPopDelay = 10000;
+			this->tipMain->ShowAlways = true;
+			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
 			// 

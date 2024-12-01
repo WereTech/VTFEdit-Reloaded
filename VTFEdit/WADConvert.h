@@ -136,7 +136,7 @@ namespace VTFEdit
 			this->chkCreateVMTFiles->Checked = true;
 			this->chkCreateVMTFiles->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->chkCreateVMTFiles->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->chkCreateVMTFiles->Location = System::Drawing::Point(80, 54);
+			this->chkCreateVMTFiles->Location = System::Drawing::Point(80, 55);
 			this->chkCreateVMTFiles->Name = L"chkCreateVMTFiles";
 			this->chkCreateVMTFiles->Size = System::Drawing::Size(101, 19);
 			this->chkCreateVMTFiles->TabIndex = 6;
@@ -147,7 +147,7 @@ namespace VTFEdit
 			// 
 			this->btnOutputFolderBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->btnOutputFolderBrowse->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->btnOutputFolderBrowse->Location = System::Drawing::Point(346, 33);
+			this->btnOutputFolderBrowse->Location = System::Drawing::Point(346, 36);
 			this->btnOutputFolderBrowse->Name = L"btnOutputFolderBrowse";
 			this->btnOutputFolderBrowse->Size = System::Drawing::Size(15, 16);
 			this->btnOutputFolderBrowse->TabIndex = 5;
@@ -158,7 +158,7 @@ namespace VTFEdit
 			// 
 			this->txtOutputFolder->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->txtOutputFolder->Location = System::Drawing::Point(80, 33);
+			this->txtOutputFolder->Location = System::Drawing::Point(80, 34);
 			this->txtOutputFolder->Name = L"txtOutputFolder";
 			this->txtOutputFolder->Size = System::Drawing::Size(260, 20);
 			this->txtOutputFolder->TabIndex = 4;
@@ -167,7 +167,7 @@ namespace VTFEdit
 			// lblOutputFolder
 			// 
 			this->lblOutputFolder->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblOutputFolder->Location = System::Drawing::Point(6, 36);
+			this->lblOutputFolder->Location = System::Drawing::Point(6, 37);
 			this->lblOutputFolder->Name = L"lblOutputFolder";
 			this->lblOutputFolder->Size = System::Drawing::Size(75, 20);
 			this->lblOutputFolder->TabIndex = 3;
@@ -177,7 +177,7 @@ namespace VTFEdit
 			// 
 			this->btnWADFileBrowse->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->btnWADFileBrowse->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->btnWADFileBrowse->Location = System::Drawing::Point(346, 14);
+			this->btnWADFileBrowse->Location = System::Drawing::Point(346, 15);
 			this->btnWADFileBrowse->Name = L"btnWADFileBrowse";
 			this->btnWADFileBrowse->Size = System::Drawing::Size(15, 17);
 			this->btnWADFileBrowse->TabIndex = 2;
@@ -188,7 +188,7 @@ namespace VTFEdit
 			// 
 			this->txtWADFile->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
-			this->txtWADFile->Location = System::Drawing::Point(80, 14);
+			this->txtWADFile->Location = System::Drawing::Point(80, 15);
 			this->txtWADFile->Name = L"txtWADFile";
 			this->txtWADFile->Size = System::Drawing::Size(260, 20);
 			this->txtWADFile->TabIndex = 1;
@@ -198,7 +198,7 @@ namespace VTFEdit
 			// lblWADFile
 			// 
 			this->lblWADFile->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblWADFile->Location = System::Drawing::Point(6, 17);
+			this->lblWADFile->Location = System::Drawing::Point(6, 18);
 			this->lblWADFile->Name = L"lblWADFile";
 			this->lblWADFile->Size = System::Drawing::Size(60, 19);
 			this->lblWADFile->TabIndex = 0;
@@ -299,7 +299,8 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->AutoPopDelay = 10000;
+			this->tipMain->ShowAlways = true;
+			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
 			// 
@@ -507,10 +508,20 @@ namespace VTFEdit
 
 						VTFCreateOptions.ImageFormat = bHasAlpha ? Options->AlphaFormat : Options->NormalFormat;
 
-						if(VTFFile.Create(dwWidth, dwHeight, lpImageData, VTFCreateOptions) != vlFalse && CVTFFileUtility::CreateResources(Options, &VTFFile))
+						if(VTFFile.Create(dwWidth, dwHeight, lpImageData, VTFCreateOptions) != vlFalse)
 						{
+							if (VTFFile.GetMinorVersion() >= 3)
+							{
+								if (Options->chkCreateLODControlResource->Checked || Options->chkCreateInformationResource->Checked)
+								{
+									if (CVTFFileUtility::CreateResources(Options, &VTFFile) == vlFalse)
+									{
+										this->Log(String::Concat("Error creating resources for ", sVTFName, ".", (gcnew String(vlGetLastError()))->Replace("\n", " ")), System::Drawing::Color::Red);
+									}
+								}
+							}
+
 							// Set flags for each VTF file created.
-							VTFFile.SetFlags(0);
 							for (vlUInt i = 0, j = 0x00000001; i < (vlUInt)this->Options->lstFlags->Items->Count; i++, j <<= 1)
 							{
 								if (this->Options->lstFlags->GetItemChecked(i))
@@ -562,31 +573,31 @@ namespace VTFEdit
 									if (sVTFFile->Contains("\\materials\\"))
 									{
 										// Convert to standard string for iteration.
-										std::string temp = msclr::interop::marshal_as<std::string>(sVTFFile);
-										System::String^ temp1 = "";
-										System::String^ subS = "";
+										std::string vtfDest = msclr::interop::marshal_as<std::string>(sVTFFile);
+										System::String^ findMaterials = "";
+										System::String^ baseTexPrefix = "";
 										bool found = false;
-										for (wchar_t i : temp)
+										for (wchar_t i : vtfDest)
 										{
 											if (!found)
 											{
-												if (temp1->Contains("\\materials\\"))
+												if (findMaterials->Contains("\\materials\\"))
 												{
 													found = true;
-													subS = subS + i;
+													baseTexPrefix = baseTexPrefix + i;
 												}
 												else {
-													temp1 = temp1 + i;
+													findMaterials = findMaterials + i;
 												}
 											}
 											else {
-												subS = subS + i;
+												baseTexPrefix = baseTexPrefix + i;
 											}
 										}
-										std::string temp2 = msclr::interop::marshal_as<std::string>(subS);
-										int index = temp2.find_last_of('.');
-										subS = subS->Remove(index); // Remove '.vtf' extension from basetexture as it's not needed.
-										this->VMTOptions->AddVMTStringNode(VMTFile, "$basetexture", subS);
+										std::string vtfSuffix = msclr::interop::marshal_as<std::string>(baseTexPrefix);
+										int period = vtfSuffix.find_last_of('.');
+										baseTexPrefix = baseTexPrefix->Remove(period); // Remove '.vtf' extension from basetexture as it's not needed.
+										this->VMTOptions->AddVMTStringNode(VMTFile, "$basetexture", baseTexPrefix);
 									}
 									else
 										this->VMTOptions->AddVMTStringNode(VMTFile, "$basetexture", sVTFName);
@@ -616,6 +627,10 @@ namespace VTFEdit
 									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$vertexcolor", this->VMTOptions->chkVertexColor->Checked, false);
 									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$model", this->VMTOptions->chkModel->Checked, false);
 									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$decal", this->VMTOptions->chkDecal->Checked, false);
+									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$nofog", this->VMTOptions->chkNoFog->Checked, false);
+									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$ignorez", this->VMTOptions->chkIgnoreZ->Checked, false);
+									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$halflambert", this->VMTOptions->chkHalfLambert->Checked, false);
+									this->VMTOptions->AddVMTBooleanNode(VMTFile, "$allowalphatocoverage", this->VMTOptions->chkAlphaCoverage->Checked, false);
 
 									cTemp = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(sVMTFile).ToPointer();
 
@@ -669,6 +684,16 @@ namespace VTFEdit
 
 		private: System::Void btnOptions_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
+			// Find the center of the main window to make this dialog box be centered on it.
+			this->Options->Location = Point(
+				(this->Location.X + (this->Width / 2)) - (this->Options->Width / 2),
+				(this->Location.Y + (this->Height / 2)) - (this->Options->Height / 2)
+			);
+			// Basic check if the Options box's location will be outside of the monitor's bounds.
+			if (this->Options->Location.X < 0 || this->Options->Location.Y < 0)
+			{
+				this->Options->Location = Point(0, 0);
+			}
 			this->Options->ShowDialog();
 		}
 
@@ -682,23 +707,25 @@ namespace VTFEdit
 		}
 
 		private: System::Void btnVMTOptions_Click(System::Object^ sender, System::EventArgs^ e) {
-			System::String^ revertText = this->VMTOptions->cboShader->Text;
+			System::String^ revertShaderText = this->VMTOptions->cboShader->Text;
+			System::String^ revertBaseText = this->VMTOptions->txtBaseTexture1->Text;
 			// Converting some things temporarily so I don't have to make a whole new dialog for this.
 			this->VMTOptions->btnCreate->Text = "OK";
 			this->VMTOptions->btnCreate->Click -= gcnew System::EventHandler(this->VMTOptions, &CVMTCreate::btnCreate_Click);
 			this->VMTOptions->btnCreate->DialogResult = System::Windows::Forms::DialogResult::OK;
 			this->VMTOptions->txtBaseTexture1->Enabled = false;
-			if (this->VMTOptions->ShowDialog() != System::Windows::Forms::DialogResult::OK)
-			{
-				return;
-			}
+			this->VMTOptions->btnBaseTexture1->Enabled = false;
+
+			this->VMTOptions->ShowDialog();
+
 			this->VMTOptions->btnCreate->Text = "Create";
 			this->VMTOptions->btnCreate->Click += gcnew System::EventHandler(this->VMTOptions, &CVMTCreate::btnCreate_Click);
 			this->VMTOptions->btnCreate->DialogResult = System::Windows::Forms::DialogResult::None;
 
-			this->VMTShader = this->VMTOptions->cboShader->Text;
-			this->VMTOptions->cboShader->Text = revertText;
+			this->VMTOptions->cboShader->Text = revertShaderText;
+			this->VMTOptions->txtBaseTexture1->Text = revertBaseText;
 			this->VMTOptions->txtBaseTexture1->Enabled = true;
+			this->VMTOptions->btnBaseTexture1->Enabled = true;
 		}
 };
 }

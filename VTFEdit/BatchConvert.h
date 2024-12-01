@@ -41,7 +41,9 @@ namespace VTFEdit
 	private:
 		CVTFOptions ^ Options;
 		CVMTCreate ^ VMTOptions;
-	public: System::String^ VMTShader;
+
+		System::String^ revertShaderText;
+		System::String^ revertBaseText;
 
 	public: 
 		CBatchConvert(CVTFOptions ^Options, CVMTCreate ^VMTOptions)
@@ -212,7 +214,6 @@ namespace VTFEdit
 			this->cboFromVTFFormat->Name = L"cboFromVTFFormat";
 			this->cboFromVTFFormat->Size = System::Drawing::Size(59, 21);
 			this->cboFromVTFFormat->TabIndex = 9;
-			this->cboFromVTFFormat->SelectedIndexChanged += gcnew System::EventHandler(this, &CBatchConvert::cboFromVTFFormat_SelectedIndexChanged);
 			// 
 			// radFromVTF
 			// 
@@ -234,7 +235,6 @@ namespace VTFEdit
 			this->txtFromVTFFilter->TabIndex = 10;
 			this->txtFromVTFFilter->Text = L"*.vtf";
 			this->tipMain->SetToolTip(this->txtFromVTFFilter, L"Wildcard filter.  Examples include *.* or *.vtf.");
-			this->txtFromVTFFilter->TextChanged += gcnew System::EventHandler(this, &CBatchConvert::txtFromVTFFilter_TextChanged);
 			// 
 			// radToVTF
 			// 
@@ -257,7 +257,6 @@ namespace VTFEdit
 			this->txtToVTFFilter->TabIndex = 7;
 			this->txtToVTFFilter->Text = L"*.tga";
 			this->tipMain->SetToolTip(this->txtToVTFFilter, L"Wildcard filter.  Examples include *.* or *.tga or *.bmp;*.tga.");
-			this->txtToVTFFilter->TextChanged += gcnew System::EventHandler(this, &CBatchConvert::txtToVTFFilter_TextChanged);
 			// 
 			// chkRecursive
 			// 
@@ -304,7 +303,6 @@ namespace VTFEdit
 			this->txtOutputFolder->Size = System::Drawing::Size(236, 20);
 			this->txtOutputFolder->TabIndex = 4;
 			this->tipMain->SetToolTip(this->txtOutputFolder, L"Destination image folder.");
-			this->txtOutputFolder->TextChanged += gcnew System::EventHandler(this, &CBatchConvert::txtOutputFolder_TextChanged);
 			// 
 			// lblOutputFolder
 			// 
@@ -380,7 +378,8 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->AutoPopDelay = 10000;
+			this->tipMain->ShowAlways = true;
+			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
 			// 
@@ -651,8 +650,19 @@ namespace VTFEdit
 							{
 								VTFCreateOptions.ImageFormat = bHasAlpha ? Options->AlphaFormat : Options->NormalFormat;
 
-								if(VTFFile.Create((vlUInt)ilGetInteger(IL_IMAGE_WIDTH), (vlUInt)ilGetInteger(IL_IMAGE_HEIGHT), ilGetData(), VTFCreateOptions) != vlFalse && CVTFFileUtility::CreateResources(Options, &VTFFile))
+								if(VTFFile.Create((vlUInt)ilGetInteger(IL_IMAGE_WIDTH), (vlUInt)ilGetInteger(IL_IMAGE_HEIGHT), ilGetData(), VTFCreateOptions) != vlFalse)
 								{
+									if (VTFFile.GetMinorVersion() >= 3)
+									{
+										if (Options->chkCreateLODControlResource->Checked || Options->chkCreateInformationResource->Checked)
+										{
+											if (CVTFFileUtility::CreateResources(Options, &VTFFile) == vlFalse)
+											{
+												this->Log(String::Concat("Error creating resources for ", Files[j]->Name, ".", (gcnew String(vlGetLastError()))->Replace("\n", " ")), System::Drawing::Color::Red);
+											}
+										}
+									}
+
 									if(!System::IO::Directory::Exists(sOutputFolder))
 									{
 										try
@@ -666,7 +676,6 @@ namespace VTFEdit
 									}
 
 									// Set flags for each VTF file created.
-									VTFFile.SetFlags(0);
 									for (vlUInt i = 0, j = 0x00000001; i < (vlUInt)this->Options->lstFlags->Items->Count; i++, j <<= 1)
 									{
 										if (this->Options->lstFlags->GetItemChecked(i))
@@ -714,35 +723,39 @@ namespace VTFEdit
 											VMTFile.Create(cTemp);
 											System::Runtime::InteropServices::Marshal::FreeHGlobal((IntPtr)cTemp);
 
+											// Revert the text for shader and basetexture to what they previously were.
+											this->VMTOptions->cboShader->Text = revertShaderText;
+											this->VMTOptions->txtBaseTexture1->Text = revertBaseText;
+
 											// Check if the target location contains \materials\ in the path. Assuming they are going to a game folder.
 											if (sVTFFile->Contains("\\materials\\"))
 											{
 												// Convert to standard string for iteration.
-												std::string temp = msclr::interop::marshal_as<std::string>(sVTFFile);
-												System::String^ temp1 = "";
-												System::String^ subS = "";
+												std::string vtfDest = msclr::interop::marshal_as<std::string>(sVTFFile);
+												System::String^ findMaterials = "";
+												System::String^ baseTexPrefix = "";
 												bool found = false;
-												for (wchar_t i : temp)
+												for (wchar_t i : vtfDest)
 												{
 													if (!found)
 													{
-														if (temp1->Contains("\\materials\\"))
+														if (findMaterials->Contains("\\materials\\"))
 														{
 															found = true;
-															subS = subS + i;
+															baseTexPrefix = baseTexPrefix + i;
 														}
 														else {
-															temp1 = temp1 + i;
+															findMaterials = findMaterials + i;
 														}
 													}
 													else {
-														subS = subS + i;
+														baseTexPrefix = baseTexPrefix + i;
 													}
 												}
-												std::string temp2 = msclr::interop::marshal_as<std::string>(subS);
-												int index = temp2.find_last_of('.');
-												subS = subS->Remove(index); // Remove '.vtf' extension from basetexture as it's not needed.
-												this->VMTOptions->AddVMTStringNode(VMTFile, "$basetexture", subS);
+												std::string vtfSuffix = msclr::interop::marshal_as<std::string>(baseTexPrefix);
+												int period = vtfSuffix.find_last_of('.');
+												baseTexPrefix = baseTexPrefix->Remove(period); // Remove '.vtf' extension from basetexture as it's not needed.
+												this->VMTOptions->AddVMTStringNode(VMTFile, "$basetexture", baseTexPrefix);
 											}
 											else
 												this->VMTOptions->AddVMTStringNode(VMTFile, "$basetexture", sVTFName);
@@ -772,6 +785,10 @@ namespace VTFEdit
 											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$vertexcolor", this->VMTOptions->chkVertexColor->Checked, false);
 											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$model", this->VMTOptions->chkModel->Checked, false);
 											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$decal", this->VMTOptions->chkDecal->Checked, false);
+											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$nofog", this->VMTOptions->chkNoFog->Checked, false);
+											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$ignorez", this->VMTOptions->chkIgnoreZ->Checked, false);
+											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$halflambert", this->VMTOptions->chkHalfLambert->Checked, false);
+											this->VMTOptions->AddVMTBooleanNode(VMTFile, "$allowalphatocoverage", this->VMTOptions->chkAlphaCoverage->Checked, false);
 
 											cTemp = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(sVMTFile).ToPointer();
 
@@ -912,6 +929,16 @@ namespace VTFEdit
 
 		private: System::Void btnOptions_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
+			// Find the center of the main window to make this dialog box be centered on it.
+			this->Options->Location = Point(
+				(this->Location.X + (this->Width / 2)) - (this->Options->Width / 2),
+				(this->Location.Y + (this->Height / 2)) - (this->Options->Height / 2)
+			);
+			// Basic check if the Options box's location will be outside of the monitor's bounds.
+			if (this->Options->Location.X < 0 || this->Options->Location.Y < 0)
+			{
+				this->Options->Location = Point(0, 0);
+			}
 			this->Options->ShowDialog();
 		}
 
@@ -924,33 +951,24 @@ namespace VTFEdit
 			this->txtLog->Refresh();
 		}
 		private: System::Void btnVMTOptions_Click(System::Object^ sender, System::EventArgs^ e) {
-			System::String^ revertText = this->VMTOptions->cboShader->Text;
+			revertShaderText = this->VMTOptions->cboShader->Text;
+			revertBaseText = this->VMTOptions->txtBaseTexture1->Text;
 			// Converting some things temporarily so I don't have to make a whole new dialog for this.
 			this->VMTOptions->btnCreate->Text = "OK";
 			this->VMTOptions->btnCreate->Click -= gcnew System::EventHandler(this->VMTOptions, &CVMTCreate::btnCreate_Click);
 			this->VMTOptions->btnCreate->DialogResult = System::Windows::Forms::DialogResult::OK;
+			this->VMTOptions->txtBaseTexture1->Text = "";
 			this->VMTOptions->txtBaseTexture1->Enabled = false;
-			if (this->VMTOptions->ShowDialog() != System::Windows::Forms::DialogResult::OK)
-			{
-				return;
-			}
+			this->VMTOptions->btnBaseTexture1->Enabled = false;
+
+			this->VMTOptions->ShowDialog();
+
 			this->VMTOptions->btnCreate->Text = "Create";
 			this->VMTOptions->btnCreate->Click += gcnew System::EventHandler(this->VMTOptions, &CVMTCreate::btnCreate_Click);
 			this->VMTOptions->btnCreate->DialogResult = System::Windows::Forms::DialogResult::None;
 
-			this->VMTShader = this->VMTOptions->cboShader->Text;
-			this->VMTOptions->cboShader->Text = revertText;
 			this->VMTOptions->txtBaseTexture1->Enabled = true;
+			this->VMTOptions->btnBaseTexture1->Enabled = true;
 		}
-
-		private: System::Void txtToVTFFilter_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-		}
-		private: System::Void txtFromVTFFilter_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-			}
-		private: System::Void txtOutputFolder_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-			}
-		private: System::Void cboFromVTFFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
-		}
-		
 };
 }

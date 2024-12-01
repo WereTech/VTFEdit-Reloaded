@@ -689,7 +689,7 @@ namespace VTFEdit
 			this->btnChannelR->RadioCheck = true;
 			this->btnChannelR->Shortcut = System::Windows::Forms::Shortcut::CtrlShiftR;
 			this->btnChannelR->Text = L"R";
-			this->btnChannelR->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannel_Click);
+			this->btnChannelR->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannelR_Click);
 			// 
 			// btnChannelG
 			// 
@@ -697,7 +697,7 @@ namespace VTFEdit
 			this->btnChannelG->RadioCheck = true;
 			this->btnChannelG->Shortcut = System::Windows::Forms::Shortcut::CtrlShiftG;
 			this->btnChannelG->Text = L"G";
-			this->btnChannelG->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannel_Click);
+			this->btnChannelG->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannelG_Click);
 			// 
 			// btnChannelB
 			// 
@@ -705,7 +705,7 @@ namespace VTFEdit
 			this->btnChannelB->RadioCheck = true;
 			this->btnChannelB->Shortcut = System::Windows::Forms::Shortcut::CtrlShiftB;
 			this->btnChannelB->Text = L"B";
-			this->btnChannelB->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannel_Click);
+			this->btnChannelB->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannelB_Click);
 			// 
 			// btnChannelA
 			// 
@@ -713,7 +713,7 @@ namespace VTFEdit
 			this->btnChannelA->RadioCheck = true;
 			this->btnChannelA->Shortcut = System::Windows::Forms::Shortcut::CtrlShiftA;
 			this->btnChannelA->Text = L"A";
-			this->btnChannelA->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannel_Click);
+			this->btnChannelA->Click += gcnew System::EventHandler(this, &CVTFEdit::btnChannelA_Click);
 			// 
 			// btnMask
 			// 
@@ -1606,11 +1606,13 @@ namespace VTFEdit
 			// 
 			// btnEditResources
 			// 
+			this->btnEditResources->Enabled = false;
 			this->btnEditResources->Location = System::Drawing::Point(7, 54);
 			this->btnEditResources->Name = L"btnEditResources";
 			this->btnEditResources->Size = System::Drawing::Size(198, 23);
 			this->btnEditResources->TabIndex = 3;
 			this->btnEditResources->Text = L"Edit Resources";
+			this->tipMain->SetToolTip(this->btnEditResources, L"Edits the resources of the VTF.\r\nOnly supported on VTF versions 7.3 and up.");
 			this->btnEditResources->UseVisualStyleBackColor = true;
 			this->btnEditResources->Click += gcnew System::EventHandler(this, &CVTFEdit::btnEditResources_Click);
 			// 
@@ -2203,6 +2205,9 @@ namespace VTFEdit
 			// tipMain
 			// 
 			this->tipMain->ShowAlways = true;
+			this->tipMain->AutoPopDelay = 20000;
+			this->tipMain->InitialDelay = 500;
+			this->tipMain->ReshowDelay = 100;
 			// 
 			// CVTFEdit
 			// 
@@ -3473,18 +3478,38 @@ namespace VTFEdit
 			if((VTFFile->GetFaceCount() - 1) < 1) {
 				this->numFace->ReadOnly = true;
 			}
+			else {
+				this->numFace->ReadOnly = false;
+			}
 
 			if((VTFFile->GetDepth() - 1) < 1) {
 				this->numSlice->ReadOnly = true;
+			}
+			else {
+				this->numSlice->ReadOnly = false;
 			}
 
 			if((VTFFile->GetMipmapCount() - 1) < 1) {
 				this->numMipmap->ReadOnly = true;
 			}
+			else {
+				this->numMipmap->ReadOnly = false;
+			}
 
 			if(VTFFile->GetFormat() == IMAGE_FORMAT_RGBA16161616F)
 			{
 				this->trkHDRExposure->Enabled = true;
+			}
+			else {
+				this->trkHDRExposure->Enabled = false;
+			}
+
+			if (VTFFile->GetSupportsResources())
+			{
+				this->btnEditResources->Enabled = true;
+			}
+			else {
+				this->btnEditResources->Enabled = false;
 			}
 
 			vlUInt uiFlags = VTFFile->GetFlags();
@@ -3994,8 +4019,8 @@ namespace VTFEdit
 		{
 			// Find the center of the main window to make this dialog box be centered on it.
 			this->Options->Location = Point(
-				(this->FormSaveLocation.X + (this->FormSaveSize.Width / 2)) - 132,
-				(this->FormSaveLocation.Y + (this->FormSaveSize.Height / 2)) - 227
+				(this->FormSaveLocation.X + (this->FormSaveSize.Width / 2)) - (this->Options->Width / 2),
+				(this->FormSaveLocation.Y + (this->FormSaveSize.Height / 2)) - (this->Options->Height / 2)
 				);
 			// Basic check if the Options box's location will be outside of the monitor's bounds.
 			if (this->Options->Location.X < 0 || this->Options->Location.Y < 0) 
@@ -4090,7 +4115,6 @@ namespace VTFEdit
 				// Create the .vtf file.
 				if(VTFFile->Create(uiWidth, uiHeight, uiFrames, uiFaces, uiSlices, lpImageData, VTFCreateOptions) != vlFalse && CVTFFileUtility::CreateResources(Options, VTFFile))
 				{
-					VTFFile->SetFlags(0);
 					for (vlUInt i = 0, j = 0x00000001; i < (vlUInt)this->Options->lstFlags->Items->Count; i++, j <<= 1)
 					{
 						if (this->Options->lstFlags->GetItemChecked(i))
@@ -4285,6 +4309,8 @@ namespace VTFEdit
 			this->btnAnimate->Enabled = false;
 			this->tmrAnimate->Enabled = false;
 
+			this->btnEditResources->Enabled = false;
+
 			// "Hide" the tab pages.
 			if(this->tabSidebar->TabPages->Contains(this->tabResources))
 			{
@@ -4343,18 +4369,23 @@ namespace VTFEdit
 			if (this->VTFFile != 0 || this->VMTFile != 0)
 			{
 				System::Media::SystemSounds::Asterisk->Play();
-				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) == System::Windows::Forms::DialogResult::Yes) {
-
-					this->New();
+				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) != System::Windows::Forms::DialogResult::Yes) {
+					return;
 				}
 			}
-			else {
-				this->New();
-			}
+			this->New();
 		}
 
 		private: System::Void btnOpen_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
+			if (this->VTFFile != 0 || this->VMTFile != 0)
+			{
+				System::Media::SystemSounds::Asterisk->Play();
+				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) != System::Windows::Forms::DialogResult::Yes) {
+					return;
+				}
+			}
+
 			if(this->dlgOpenFile->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 			{
 				this->Open(this->dlgOpenFile->FileName, false);
@@ -4376,6 +4407,14 @@ namespace VTFEdit
 
 		private: System::Void btnImport_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
+			if (this->VTFFile != 0 || this->VMTFile != 0)
+			{
+				System::Media::SystemSounds::Asterisk->Play();
+				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) != System::Windows::Forms::DialogResult::Yes) {
+					return;
+				}
+			}
+
 			if(this->dlgImportFile->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 			{
 				this->Import(this->dlgImportFile->FileNames);
@@ -4442,7 +4481,14 @@ namespace VTFEdit
 
 		private: System::Void btnRecentFile_Click(System::Object ^sender, System::EventArgs ^e)
 		{
-			this->Open(static_cast<System::String ^>(this->RecentFiles[static_cast<MenuItem ^>(sender)->Index]), false);
+			if (this->VTFFile != 0 || this->VMTFile != 0)
+			{
+				System::Media::SystemSounds::Asterisk->Play();
+				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) != System::Windows::Forms::DialogResult::Yes) {
+					return;
+				}
+			}
+			this->Open(static_cast<System::String^>(this->RecentFiles[static_cast<MenuItem^>(sender)->Index]), false);
 		}
 
 		private: System::Void btnExit_Click(System::Object ^  sender, System::EventArgs ^  e)
@@ -4478,6 +4524,16 @@ namespace VTFEdit
 
 				System::Drawing::Bitmap ^Bitmap = static_cast<System::Drawing::Bitmap ^>(Data->GetData(System::Windows::Forms::DataFormats::Bitmap));
 
+				// Find the center of the main window to make this dialog box be centered on it.
+				this->Options->Location = Point(
+					(this->Location.X + (this->Width / 2)) - (this->Options->Width / 2),
+					(this->Location.Y + (this->Height / 2)) - (this->Options->Height / 2)
+				);
+				// Basic check if the Options box's location will be outside of the monitor's bounds.
+				if (this->Options->Location.X < 0 || this->Options->Location.Y < 0)
+				{
+					this->Options->Location = Point(0, 0);
+				}
 				if(this->Options->ShowDialog() != System::Windows::Forms::DialogResult::OK)
 				{
 					return;
@@ -4543,13 +4599,17 @@ namespace VTFEdit
 
 		private: System::Void btnChannel_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
-			this->btnChannelRGB->Checked = false;
+			this->btnChannelRGB->Checked = true;
+			this->toolStripRGB->Checked = true;
+
 			this->btnChannelR->Checked = false;
 			this->btnChannelG->Checked = false;
 			this->btnChannelB->Checked = false;
 			this->btnChannelA->Checked = false;
-
-			static_cast<System::Windows::Forms::MenuItem ^>(sender)->Checked = true;
+			this->toolStripR->Checked = false;
+			this->toolStripG->Checked = false;
+			this->toolStripB->Checked = false;
+			this->toolStripA->Checked = false;
 
 			this->UpdateVTFFile();
 		}
@@ -4557,6 +4617,7 @@ namespace VTFEdit
 		private: System::Void btnMask_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
 			this->btnMask->Checked = !this->btnMask->Checked;
+			this->toolStripMask->Checked = !this->toolStripMask->Checked;
 
 			this->UpdateVTFFile();
 		}
@@ -4564,6 +4625,7 @@ namespace VTFEdit
 		private: System::Void btnTile_Click(System::Object ^  sender, System::EventArgs ^  e)
 		{
 			this->btnTile->Checked = !this->btnTile->Checked;
+			this->toolStripTile->Checked = !this->toolStripTile->Checked;
 
 			this->UpdateVTFFile();
 		}
@@ -5555,8 +5617,6 @@ namespace VTFEdit
 						else if (System::String::Compare(sArg, "VTFOptions.VMTShader", true) == 0)
 						{
 							this->VMTCreate->cboShader->Text = sVal;
-							this->BatchConvert->VMTShader = sVal;
-							this->WADConvert->VMTShader = sVal;
 							this->FormVMTShader = sVal;
 						}
 
@@ -5894,7 +5954,6 @@ namespace VTFEdit
 		{
 			System::Media::SystemSounds::Asterisk->Play();
 			if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) == System::Windows::Forms::DialogResult::Yes) {
-
 				this->Close();
 			}
 		}
@@ -5927,6 +5986,16 @@ namespace VTFEdit
 
 				System::Drawing::Bitmap^ Bitmap = static_cast<System::Drawing::Bitmap^>(Data->GetData(System::Windows::Forms::DataFormats::Bitmap));
 
+				// Find the center of the main window to make this dialog box be centered on it.
+				this->Options->Location = Point(
+					(this->Location.X + (this->Width / 2)) - (this->Options->Width / 2),
+					(this->Location.Y + (this->Height / 2)) - (this->Options->Height / 2)
+				);
+				// Basic check if the Options box's location will be outside of the monitor's bounds.
+				if (this->Options->Location.X < 0 || this->Options->Location.Y < 0)
+				{
+					this->Options->Location = Point(0, 0);
+				}
 				if (this->Options->ShowDialog() != System::Windows::Forms::DialogResult::OK)
 				{
 					return;
@@ -6021,7 +6090,6 @@ namespace VTFEdit
 		{
 			System::Media::SystemSounds::Asterisk->Play();
 			if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) == System::Windows::Forms::DialogResult::Yes) {
-
 				this->Close();
 			}
 		}
@@ -6030,19 +6098,14 @@ namespace VTFEdit
 			if (this->VTFFile != 0 || this->VMTFile != 0)
 			{
 				System::Media::SystemSounds::Asterisk->Play();
-				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) == System::Windows::Forms::DialogResult::Yes) {
-
-					if (this->dlgImportFile->ShowDialog() == System::Windows::Forms::DialogResult::OK)
-					{
-						this->Import(this->dlgImportFile->FileNames);
-					}
+				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) != System::Windows::Forms::DialogResult::Yes) {
+					return;
 				}
 			}
-			else {
-				if (this->dlgImportFile->ShowDialog() == System::Windows::Forms::DialogResult::OK)
-				{
-					this->Import(this->dlgImportFile->FileNames);
-				}
+
+			if (this->dlgImportFile->ShowDialog() == System::Windows::Forms::DialogResult::OK)
+			{
+				this->Import(this->dlgImportFile->FileNames);
 			}
 		}
 
@@ -6050,14 +6113,11 @@ namespace VTFEdit
 			if (this->VTFFile != 0 || this->VMTFile != 0)
 			{
 				System::Media::SystemSounds::Asterisk->Play();
-				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) == System::Windows::Forms::DialogResult::Yes) {
-
-					this->New();
+				if (MessageBox::Show("Are you sure you want to close the current file?", "Confirm Close", MessageBoxButtons::YesNo) != System::Windows::Forms::DialogResult::Yes) {
+					return;
 				}
 			}
-			else {
-				this->New();
-			}
+			this->New();
 		}
 
 		private: System::Void btnEditResources_Click(System::Object^ sender, System::EventArgs^ e) {
@@ -6100,8 +6160,8 @@ namespace VTFEdit
 
 			// Find the center of the main window to make this dialog box be centered on it.
 			this->EditResources->Location = Point(
-				(this->FormSaveLocation.X + (this->FormSaveSize.Width / 2)) - 132,
-				(this->FormSaveLocation.Y + (this->FormSaveSize.Height / 2)) - 179
+				(this->FormSaveLocation.X + (this->FormSaveSize.Width / 2)) - (this->EditResources->Width / 2),
+				(this->FormSaveLocation.Y + (this->FormSaveSize.Height / 2)) - (this->EditResources->Height / 2)
 			);
 			// Basic check if the Options box's location will be outside of the monitor's bounds.
 			if (this->EditResources->Location.X < 0 || this->EditResources->Location.Y < 0)
@@ -6180,6 +6240,70 @@ namespace VTFEdit
 			else {
 				this->tmrAnimate->Interval = Convert::ToInt32(this->numFrameRate->Value);
 			}
+		}
+
+		private: System::Void btnChannelR_Click(System::Object^ sender, System::EventArgs^ e) {
+			this->btnChannelR->Checked = true;
+			this->toolStripR->Checked = true;
+
+			this->btnChannelRGB->Checked = false;
+			this->btnChannelG->Checked = false;
+			this->btnChannelB->Checked = false;
+			this->btnChannelA->Checked = false;
+			this->toolStripRGB->Checked = false;
+			this->toolStripG->Checked = false;
+			this->toolStripB->Checked = false;
+			this->toolStripA->Checked = false;
+
+			this->UpdateVTFFile();
+		}
+
+		private: System::Void btnChannelG_Click(System::Object^ sender, System::EventArgs^ e) {
+			this->btnChannelG->Checked = true;
+			this->toolStripG->Checked = true;
+
+			this->btnChannelRGB->Checked = false;
+			this->btnChannelR->Checked = false;
+			this->btnChannelB->Checked = false;
+			this->btnChannelA->Checked = false;
+			this->toolStripRGB->Checked = false;
+			this->toolStripR->Checked = false;
+			this->toolStripB->Checked = false;
+			this->toolStripA->Checked = false;
+
+			this->UpdateVTFFile();
+		}
+
+		private: System::Void btnChannelB_Click(System::Object^ sender, System::EventArgs^ e) {
+			this->btnChannelB->Checked = true;
+			this->toolStripB->Checked = true;
+
+			this->btnChannelRGB->Checked = false;
+			this->btnChannelR->Checked = false;
+			this->btnChannelG->Checked = false;
+			this->btnChannelA->Checked = false;
+			this->toolStripRGB->Checked = false;
+			this->toolStripR->Checked = false;
+			this->toolStripG->Checked = false;
+			this->toolStripA->Checked = false;
+
+			this->UpdateVTFFile();
+		}
+
+		private: System::Void btnChannelA_Click(System::Object^ sender, System::EventArgs^ e) {
+			this->btnChannelA->Checked = true;
+			this->toolStripA->Checked = true;
+
+			this->btnChannelRGB->Checked = false;
+			this->btnChannelR->Checked = false;
+			this->btnChannelG->Checked = false;
+			this->btnChannelB->Checked = false;
+			this->toolStripRGB->Checked = false;
+			this->toolStripR->Checked = false;
+			this->toolStripG->Checked = false;
+			this->toolStripB->Checked = false;
+
+			this->UpdateVTFFile();
 		}
 };
 }

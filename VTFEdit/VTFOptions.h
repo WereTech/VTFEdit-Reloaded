@@ -99,7 +99,7 @@ namespace VTFEdit
 	private: System::Windows::Forms::TabPage^ tabResources;
 	private: System::Windows::Forms::GroupBox^ grpResourceOptions;
 	private: System::Windows::Forms::GroupBox^ grpLODControlResource;
-	private: System::Windows::Forms::CheckBox^ chkCreateLODControlResource;
+	public: System::Windows::Forms::CheckBox^ chkCreateLODControlResource;
 	private: System::Windows::Forms::Label^ lblLuminanceWeightsG;
 	private: System::Windows::Forms::NumericUpDown^ numLODControlClampV;
 	private: System::Windows::Forms::Label^ lblLODControlClampV;
@@ -108,7 +108,7 @@ namespace VTFEdit
 	private: System::Windows::Forms::GroupBox^ grpInformationResource;
 	private: System::Windows::Forms::Label^ lblInformationContact;
 	private: System::Windows::Forms::Label^ lblInformationAuthor;
-	private: System::Windows::Forms::CheckBox^ chkCreateInformationResource;
+	public: System::Windows::Forms::CheckBox^ chkCreateInformationResource;
 	private: System::Windows::Forms::TextBox^ txtInformationContact;
 	private: System::Windows::Forms::TextBox^ txtInformationAuthor;
 	private: System::Windows::Forms::TextBox^ txtInformationComments;
@@ -266,7 +266,7 @@ namespace VTFEdit
 			// chkReflectivity
 			// 
 			this->chkReflectivity->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->chkReflectivity->Location = System::Drawing::Point(6, 12);
+			this->chkReflectivity->Location = System::Drawing::Point(6, 14);
 			this->chkReflectivity->Name = L"chkReflectivity";
 			this->chkReflectivity->Size = System::Drawing::Size(192, 19);
 			this->chkReflectivity->TabIndex = 0;
@@ -276,7 +276,7 @@ namespace VTFEdit
 			// chkThumbnail
 			// 
 			this->chkThumbnail->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->chkThumbnail->Location = System::Drawing::Point(6, 31);
+			this->chkThumbnail->Location = System::Drawing::Point(6, 33);
 			this->chkThumbnail->Name = L"chkThumbnail";
 			this->chkThumbnail->Size = System::Drawing::Size(192, 20);
 			this->chkThumbnail->TabIndex = 1;
@@ -287,7 +287,7 @@ namespace VTFEdit
 			// chkSphereMap
 			// 
 			this->chkSphereMap->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->chkSphereMap->Location = System::Drawing::Point(6, 51);
+			this->chkSphereMap->Location = System::Drawing::Point(6, 53);
 			this->chkSphereMap->Name = L"chkSphereMap";
 			this->chkSphereMap->Size = System::Drawing::Size(192, 15);
 			this->chkSphereMap->TabIndex = 2;
@@ -498,7 +498,7 @@ namespace VTFEdit
 			// 
 			this->numGammaCorrection->DecimalPlaces = 2;
 			this->numGammaCorrection->Increment = System::Decimal(gcnew cli::array< System::Int32 >(4) { 5, 0, 0, 131072 });
-			this->numGammaCorrection->Location = System::Drawing::Point(78, 38);
+			this->numGammaCorrection->Location = System::Drawing::Point(78, 35);
 			this->numGammaCorrection->Name = L"numGammaCorrection";
 			this->numGammaCorrection->Size = System::Drawing::Size(120, 20);
 			this->numGammaCorrection->TabIndex = 2;
@@ -680,7 +680,8 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->AutoPopDelay = 10000;
+			this->tipMain->ShowAlways = true;
+			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
 			// 
@@ -688,7 +689,7 @@ namespace VTFEdit
 			// 
 			this->cboVersion->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->cboVersion->Items->AddRange(gcnew cli::array< System::Object^  >(6) { L"7.5", L"7.4", L"7.3", L"7.2", L"7.1", L"7.0" });
-			this->cboVersion->Location = System::Drawing::Point(78, 19);
+			this->cboVersion->Location = System::Drawing::Point(78, 16);
 			this->cboVersion->Name = L"cboVersion";
 			this->cboVersion->Size = System::Drawing::Size(120, 21);
 			this->cboVersion->TabIndex = 1;
@@ -835,7 +836,7 @@ namespace VTFEdit
 			// lblLuminanceWeightsB
 			// 
 			this->lblLuminanceWeightsB->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblLuminanceWeightsB->Location = System::Drawing::Point(6, 57);
+			this->lblLuminanceWeightsB->Location = System::Drawing::Point(6, 59);
 			this->lblLuminanceWeightsB->Name = L"lblLuminanceWeightsB";
 			this->lblLuminanceWeightsB->Size = System::Drawing::Size(66, 13);
 			this->lblLuminanceWeightsB->TabIndex = 4;
@@ -844,7 +845,7 @@ namespace VTFEdit
 			// lblLuminanceWeightsG
 			// 
 			this->lblLuminanceWeightsG->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblLuminanceWeightsG->Location = System::Drawing::Point(6, 38);
+			this->lblLuminanceWeightsG->Location = System::Drawing::Point(6, 40);
 			this->lblLuminanceWeightsG->Name = L"lblLuminanceWeightsG";
 			this->lblLuminanceWeightsG->Size = System::Drawing::Size(66, 13);
 			this->lblLuminanceWeightsG->TabIndex = 2;
@@ -853,7 +854,7 @@ namespace VTFEdit
 			// lblLuminanceWeightsR
 			// 
 			this->lblLuminanceWeightsR->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblLuminanceWeightsR->Location = System::Drawing::Point(6, 19);
+			this->lblLuminanceWeightsR->Location = System::Drawing::Point(6, 21);
 			this->lblLuminanceWeightsR->Name = L"lblLuminanceWeightsR";
 			this->lblLuminanceWeightsR->Size = System::Drawing::Size(66, 12);
 			this->lblLuminanceWeightsR->TabIndex = 0;
