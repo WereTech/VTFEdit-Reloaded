@@ -369,6 +369,7 @@ namespace VTFEdit
 			this->cboFormat->TabIndex = 1;
 			this->tipMain->SetToolTip(this->cboFormat, L"The output image format for textures with no alpha channel. Common values are DXT"
 				L"1, BGR888 and UV88.");
+			this->cboFormat->SelectedIndexChanged += gcnew System::EventHandler(this, &CVTFOptions::cboFormat_SelectedIndexChanged);
 			// 
 			// lblFormat
 			// 
@@ -453,6 +454,7 @@ namespace VTFEdit
 			this->cboAlphaFormat->TabIndex = 3;
 			this->tipMain->SetToolTip(this->cboAlphaFormat, L"The output image format for textures with an alpha channel. Common values are DXT"
 				L"5 and BGRA888.");
+			this->cboAlphaFormat->SelectedIndexChanged += gcnew System::EventHandler(this, &CVTFOptions::cboAlphaFormat_SelectedIndexChanged);
 			// 
 			// lblAlphaFormat
 			// 
@@ -478,7 +480,6 @@ namespace VTFEdit
 			this->grpMipmaps->TabIndex = 2;
 			this->grpMipmaps->TabStop = false;
 			this->grpMipmaps->Text = L"Mipmaps:";
-			this->grpMipmaps->Enter += gcnew System::EventHandler(this, &CVTFOptions::grpMipmaps_Enter);
 			// 
 			// grpGammaCorrection
 			// 
@@ -507,7 +508,7 @@ namespace VTFEdit
 			// lblGammaCorrection
 			// 
 			this->lblGammaCorrection->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->lblGammaCorrection->Location = System::Drawing::Point(6, 38);
+			this->lblGammaCorrection->Location = System::Drawing::Point(7, 38);
 			this->lblGammaCorrection->Name = L"lblGammaCorrection";
 			this->lblGammaCorrection->Size = System::Drawing::Size(66, 13);
 			this->lblGammaCorrection->TabIndex = 1;
@@ -516,7 +517,7 @@ namespace VTFEdit
 			// chkGammaCorrection
 			// 
 			this->chkGammaCorrection->FlatStyle = System::Windows::Forms::FlatStyle::System;
-			this->chkGammaCorrection->Location = System::Drawing::Point(6, 12);
+			this->chkGammaCorrection->Location = System::Drawing::Point(6, 16);
 			this->chkGammaCorrection->Name = L"chkGammaCorrection";
 			this->chkGammaCorrection->Size = System::Drawing::Size(192, 19);
 			this->chkGammaCorrection->TabIndex = 0;
@@ -680,10 +681,10 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->ShowAlways = true;
 			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
+			this->tipMain->ShowAlways = true;
 			// 
 			// cboVersion
 			// 
@@ -1585,12 +1586,6 @@ namespace VTFEdit
 
 	private: System::Void CVTFOptions_Load(System::Object^ sender, System::EventArgs^ e)
 	{
-		/*this->cboFormat->SelectedIndex = 0;
-		this->cboMipmapFilter->SelectedIndex = 1;
-		this->cboSharpenFilter->SelectedIndex = 7;
-		this->cboTextureType->SelectedIndex = 0;
-		this->cboKernelFilter->SelectedIndex = 1;
-		this->cboHeightSource->SelectedIndex = 1;*/
 	}
 
 	private: System::Void cboTextureType_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e)
@@ -1706,7 +1701,18 @@ namespace VTFEdit
 	{
 		this->DialogResult = System::Windows::Forms::DialogResult::Cancel;
 	}
-	private: System::Void grpMipmaps_Enter(System::Object^ sender, System::EventArgs^ e) {
+
+	private: System::Void cboFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
+		// Check both formats for I8 or IA88
+		this->numLuminanceWeightsR->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		this->numLuminanceWeightsG->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		this->numLuminanceWeightsB->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+	}
+
+	private: System::Void cboAlphaFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->numLuminanceWeightsR->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		this->numLuminanceWeightsG->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		this->numLuminanceWeightsB->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
 	}
 };
 }

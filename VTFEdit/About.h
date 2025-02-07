@@ -171,7 +171,7 @@ namespace VTFEdit
 			this->lblVTFEditVersion->Name = L"lblVTFEditVersion";
 			this->lblVTFEditVersion->Size = System::Drawing::Size(99, 20);
 			this->lblVTFEditVersion->TabIndex = 1;
-			this->lblVTFEditVersion->Text = L"Version: 2.0.8";
+			this->lblVTFEditVersion->Text = L"Version: 2.0.9";
 			// 
 			// lnkNemsTools
 			// 

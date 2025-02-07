@@ -408,7 +408,7 @@ namespace VTFLib
 		vlBool GetHasThumbnail() const;		//!< Returns if a the current VTF image image contains a thumbnail version.
 
 		vlUInt GetThumbnailWidth() const;	//!< Returns the width in pixels of the current images thumbnail.
-		vlUInt GetThumbnailHeight() const;	//!< Returns the heught in pixels of the current images thumbnail.
+		vlUInt GetThumbnailHeight() const;	//!< Returns the height in pixels of the current images thumbnail.
 
 		VTFImageFormat GetThumbnailFormat() const;	//!< Returns the image format of the current images thumbnail.
 

@@ -43,7 +43,8 @@ namespace VTFEdit
 		CVMTCreate ^ VMTOptions;
 
 		System::String^ revertShaderText;
-		System::String^ revertBaseText;
+
+		   System::String^ revertBaseText;
 
 	public: 
 		CBatchConvert(CVTFOptions ^Options, CVMTCreate ^VMTOptions)
@@ -57,6 +58,7 @@ namespace VTFEdit
 	private: System::Windows::Forms::Button ^  btnOptions;
 	private: System::Windows::Forms::GroupBox ^  grpProgress;
 	private: System::Windows::Forms::ProgressBar ^  barProgress;
+	private: System::Windows::Forms::Label^ lblProgress;
 	private: System::Windows::Forms::Button ^  btnClose;
 	private: System::Windows::Forms::Button ^  btnConvert;
 	private: System::Windows::Forms::GroupBox ^  grpOptions;
@@ -96,6 +98,7 @@ namespace VTFEdit
 			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(CBatchConvert::typeid));
 			this->btnOptions = (gcnew System::Windows::Forms::Button());
 			this->grpProgress = (gcnew System::Windows::Forms::GroupBox());
+			this->lblProgress = (gcnew System::Windows::Forms::Label());
 			this->barProgress = (gcnew System::Windows::Forms::ProgressBar());
 			this->btnClose = (gcnew System::Windows::Forms::Button());
 			this->btnConvert = (gcnew System::Windows::Forms::Button());
@@ -138,6 +141,7 @@ namespace VTFEdit
 			// 
 			this->grpProgress->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->grpProgress->Controls->Add(this->lblProgress);
 			this->grpProgress->Controls->Add(this->barProgress);
 			this->grpProgress->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->grpProgress->Location = System::Drawing::Point(6, 127);
@@ -147,13 +151,24 @@ namespace VTFEdit
 			this->grpProgress->TabStop = false;
 			this->grpProgress->Text = L"Progress:";
 			// 
+			// lblProgress
+			// 
+			this->lblProgress->Anchor = System::Windows::Forms::AnchorStyles::Right;
+			this->lblProgress->BackColor = System::Drawing::Color::Transparent;
+			this->lblProgress->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
+			this->lblProgress->Location = System::Drawing::Point(312, 15);
+			this->lblProgress->Name = L"lblProgress";
+			this->lblProgress->Size = System::Drawing::Size(55, 21);
+			this->lblProgress->TabIndex = 1;
+			this->lblProgress->TextAlign = System::Drawing::ContentAlignment::MiddleLeft;
+			// 
 			// barProgress
 			// 
 			this->barProgress->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->barProgress->Location = System::Drawing::Point(6, 16);
 			this->barProgress->Name = L"barProgress";
-			this->barProgress->Size = System::Drawing::Size(360, 19);
+			this->barProgress->Size = System::Drawing::Size(300, 19);
 			this->barProgress->TabIndex = 0;
 			// 
 			// btnClose
@@ -378,10 +393,10 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->ShowAlways = true;
 			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
+			this->tipMain->ShowAlways = true;
 			// 
 			// btnVMTOptions
 			// 
@@ -792,7 +807,7 @@ namespace VTFEdit
 
 											cTemp = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(sVMTFile).ToPointer();
 
-											if(VMTFile.Save(cTemp));
+											if(VMTFile.Save(cTemp))
 												this->Log(String::Concat("Wrote ", sVMTFile, "."), System::Drawing::Color::Green);
 											System::Runtime::InteropServices::Marshal::FreeHGlobal((IntPtr)cTemp);
 
@@ -893,6 +908,7 @@ namespace VTFEdit
 					}
 
 					this->barProgress->Value++;
+					this->lblProgress->Text = String::Concat("% ", ((this->barProgress->Value / this->barProgress->Maximum) * 100).ToString("000.00"));
 					this->barProgress->Refresh();
 				}
 			}

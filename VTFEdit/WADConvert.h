@@ -40,7 +40,9 @@ namespace VTFEdit
 	{
 	private:
 		CVTFOptions ^Options;
-		CVMTCreate^ VMTOptions;
+	private: System::Windows::Forms::Label^ lblProgress;
+
+		   CVMTCreate^ VMTOptions;
 
 	public: 
 		CWADConvert(CVTFOptions ^Options, CVMTCreate ^VMTOptions)
@@ -106,6 +108,7 @@ namespace VTFEdit
 			this->txtLog = (gcnew System::Windows::Forms::RichTextBox());
 			this->tipMain = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->btnVMTOptions = (gcnew System::Windows::Forms::Button());
+			this->lblProgress = (gcnew System::Windows::Forms::Label());
 			this->grpOptions->SuspendLayout();
 			this->grpProgress->SuspendLayout();
 			this->grpLog->SuspendLayout();
@@ -193,7 +196,6 @@ namespace VTFEdit
 			this->txtWADFile->Size = System::Drawing::Size(260, 20);
 			this->txtWADFile->TabIndex = 1;
 			this->tipMain->SetToolTip(this->txtWADFile, L"Source .wad file.");
-			this->txtWADFile->TextChanged += gcnew System::EventHandler(this, &CWADConvert::txtWADFile_TextChanged);
 			// 
 			// lblWADFile
 			// 
@@ -219,7 +221,7 @@ namespace VTFEdit
 			// btnConvert
 			// 
 			this->btnConvert->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->btnConvert->Enabled = false;
+			this->btnConvert->Enabled = true;
 			this->btnConvert->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->btnConvert->Location = System::Drawing::Point(252, 334);
 			this->btnConvert->Name = L"btnConvert";
@@ -232,6 +234,7 @@ namespace VTFEdit
 			// 
 			this->grpProgress->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
+			this->grpProgress->Controls->Add(this->lblProgress);
 			this->grpProgress->Controls->Add(this->barProgress);
 			this->grpProgress->FlatStyle = System::Windows::Forms::FlatStyle::System;
 			this->grpProgress->Location = System::Drawing::Point(6, 88);
@@ -247,7 +250,7 @@ namespace VTFEdit
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->barProgress->Location = System::Drawing::Point(6, 16);
 			this->barProgress->Name = L"barProgress";
-			this->barProgress->Size = System::Drawing::Size(358, 19);
+			this->barProgress->Size = System::Drawing::Size(300, 19);
 			this->barProgress->TabIndex = 0;
 			// 
 			// dlgOpenWADFile
@@ -299,10 +302,10 @@ namespace VTFEdit
 			// 
 			// tipMain
 			// 
-			this->tipMain->ShowAlways = true;
 			this->tipMain->AutoPopDelay = 20000;
 			this->tipMain->InitialDelay = 500;
 			this->tipMain->ReshowDelay = 100;
+			this->tipMain->ShowAlways = true;
 			// 
 			// btnVMTOptions
 			// 
@@ -314,6 +317,17 @@ namespace VTFEdit
 			this->btnVMTOptions->Text = L"VM&T Options";
 			this->btnVMTOptions->UseVisualStyleBackColor = true;
 			this->btnVMTOptions->Click += gcnew System::EventHandler(this, &CWADConvert::btnVMTOptions_Click);
+			// 
+			// lblProgress
+			// 
+			this->lblProgress->Anchor = System::Windows::Forms::AnchorStyles::Right;
+			this->lblProgress->BackColor = System::Drawing::Color::Transparent;
+			this->lblProgress->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
+			this->lblProgress->Location = System::Drawing::Point(311, 16);
+			this->lblProgress->Name = L"lblProgress";
+			this->lblProgress->Size = System::Drawing::Size(55, 21);
+			this->lblProgress->TabIndex = 1;
+			this->lblProgress->TextAlign = System::Drawing::ContentAlignment::MiddleLeft;
 			// 
 			// CWADConvert
 			// 
@@ -401,11 +415,6 @@ namespace VTFEdit
 			{
 				this->txtOutputFolder->Text = this->dlgOpenFolder->SelectedPath;
 			}
-		}
-
-		private: System::Void txtWADFile_TextChanged(System::Object ^  sender, System::EventArgs ^  e)
-		{
-			this->btnConvert->Enabled = System::IO::File::Exists(this->txtWADFile->Text) && System::IO::Directory::Exists(this->txtOutputFolder->Text);
 		}
 
 		private: System::Void btnConvert_Click(System::Object ^  sender, System::EventArgs ^  e)
@@ -634,8 +643,8 @@ namespace VTFEdit
 
 									cTemp = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(sVMTFile).ToPointer();
 
-									if (VMTFile.Save(cTemp));
-									this->Log(String::Concat("Wrote ", sVMTFile, "."), System::Drawing::Color::Green);
+									if (VMTFile.Save(cTemp))
+										this->Log(String::Concat("Wrote ", sVMTFile, "."), System::Drawing::Color::Green);
 									System::Runtime::InteropServices::Marshal::FreeHGlobal((IntPtr)cTemp);
 
 								}
@@ -669,6 +678,7 @@ namespace VTFEdit
 				this->Log(String::Concat(sVTFName, " processed."), System::Drawing::Color::Gray);
 
 				this->barProgress->Value = i;
+				this->lblProgress->Text = String::Concat("% ", ((this->barProgress->Value / this->barProgress->Maximum) * 100).ToString("000.00"));
 				this->barProgress->Refresh();
 			}
 

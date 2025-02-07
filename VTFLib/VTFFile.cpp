@@ -268,7 +268,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 	this->Header = new SVTFHeader;
 	memset(this->Header, 0, sizeof(SVTFHeader));
 
-	strcpy(this->Header->TypeString, "VTF");
+	strcpy_s(this->Header->TypeString, "VTF");
 	this->Header->Version[0] = VTF_MAJOR_VERSION;
 	this->Header->Version[1] = VTF_MINOR_VERSION_DEFAULT;
 	this->Header->HeaderSize = 0;
