@@ -738,10 +738,6 @@ namespace VTFEdit
 											VMTFile.Create(cTemp);
 											System::Runtime::InteropServices::Marshal::FreeHGlobal((IntPtr)cTemp);
 
-											// Revert the text for shader and basetexture to what they previously were.
-											this->VMTOptions->cboShader->Text = revertShaderText;
-											this->VMTOptions->txtBaseTexture1->Text = revertBaseText;
-
 											// Check if the target location contains \materials\ in the path. Assuming they are going to a game folder.
 											if (sVTFFile->Contains("\\materials\\"))
 											{
@@ -823,6 +819,7 @@ namespace VTFEdit
 								{
 									this->Log(String::Concat("Error creating ", Files[j]->Name, ".", (gcnew String(vlGetLastError()))->Replace("\n", " ")), System::Drawing::Color::Red);
 								}
+								
 							}
 							else
 							{
@@ -912,6 +909,10 @@ namespace VTFEdit
 					this->barProgress->Refresh();
 				}
 			}
+
+			// Revert the text for shader and basetexture to what they previously were.
+			this->VMTOptions->cboShader->Text = revertShaderText;
+			this->VMTOptions->txtBaseTexture1->Text = revertBaseText;
 
 			this->Log(String::Concat("Exiting ", sInputFolder, "."), System::Drawing::Color::Green);
 		}

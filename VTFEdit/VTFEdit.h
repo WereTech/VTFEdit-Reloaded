@@ -814,6 +814,7 @@ namespace VTFEdit
 			this->numFrameRate->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->numFrameRate->Location = System::Drawing::Point(68, 104);
+			this->numFrameRate->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 10000, 0, 0, 0 });
 			this->numFrameRate->Name = L"numFrameRate";
 			this->numFrameRate->Size = System::Drawing::Size(144, 20);
 			this->numFrameRate->TabIndex = 19;
@@ -1502,6 +1503,7 @@ namespace VTFEdit
 			this->btnEditResources->Text = L"Edit Resources";
 			this->tipMain->SetToolTip(this->btnEditResources, L"Edits the resources of the VTF.\r\nOnly supported on VTF versions 7.3 and up.");
 			this->btnEditResources->UseVisualStyleBackColor = true;
+			this->btnEditResources->Click += gcnew System::EventHandler(this, &CVTFEdit::btnEditResources_Click);
 			// 
 			// clrReflectivity
 			// 

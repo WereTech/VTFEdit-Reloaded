@@ -696,6 +696,7 @@ namespace VTFEdit
 			this->cboVersion->TabIndex = 1;
 			this->tipMain->SetToolTip(this->cboVersion, L"VTF Version number. Higher versions support more features but are less compatible"
 				L" with older games.");
+			this->cboVersion->SelectedIndexChanged += gcnew System::EventHandler(this, &CVTFOptions::cboVersion_SelectedIndexChanged);
 			// 
 			// chkCreateLODControlResource
 			// 
@@ -707,6 +708,7 @@ namespace VTFEdit
 			this->chkCreateLODControlResource->Text = L"Create LOD Control Resource";
 			this->tipMain->SetToolTip(this->chkCreateLODControlResource, L"Clamp texture LODs on the U and V axes.");
 			this->chkCreateLODControlResource->CheckedChanged += gcnew System::EventHandler(this, &CVTFOptions::chkCreateLODControlResource_CheckedChanged);
+			this->chkCreateLODControlResource->EnabledChanged += gcnew System::EventHandler(this, &CVTFOptions::chkCreateLODControlResource_EnabledChanged);
 			// 
 			// chkCreateInformationResource
 			// 
@@ -718,6 +720,7 @@ namespace VTFEdit
 			this->chkCreateInformationResource->Text = L"Create Information Resource";
 			this->tipMain->SetToolTip(this->chkCreateInformationResource, L"Embed texture metadata.\r\nNote: Creates an unofficial KVF resource.");
 			this->chkCreateInformationResource->CheckedChanged += gcnew System::EventHandler(this, &CVTFOptions::chkCreateInformationResource_CheckedChanged);
+			this->chkCreateInformationResource->EnabledChanged += gcnew System::EventHandler(this, &CVTFOptions::chkCreateInformationResource_EnabledChanged);
 			// 
 			// numLuminanceWeightsR
 			// 
@@ -1454,7 +1457,7 @@ namespace VTFEdit
 		}
 		void set(vlBool bCreateLODControlResource)
 		{
-			this->chkCreateLODControlResource->Checked = bCreateLODControlResource > 0;
+			this->chkCreateLODControlResource->Checked = (bCreateLODControlResource > 0 && (this->cboVersion->SelectedIndex == 0 || this->cboVersion->SelectedIndex == 1 || this->cboVersion->SelectedIndex == 2));
 		}
 	}
 
@@ -1508,7 +1511,7 @@ namespace VTFEdit
 		}
 		void set(vlBool bCreateInformationResource)
 		{
-			this->chkCreateInformationResource->Checked = bCreateInformationResource > 0;
+			this->chkCreateInformationResource->Checked = (bCreateInformationResource > 0 && (this->cboVersion->SelectedIndex == 0 || this->cboVersion->SelectedIndex == 1 || this->cboVersion->SelectedIndex == 2));
 		}
 	}
 
@@ -1713,6 +1716,36 @@ namespace VTFEdit
 		this->numLuminanceWeightsR->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
 		this->numLuminanceWeightsG->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
 		this->numLuminanceWeightsB->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+	}
+
+	private: System::Void cboVersion_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
+		bool supported = (this->cboVersion->SelectedIndex == 0 || this->cboVersion->SelectedIndex == 1 || this->cboVersion->SelectedIndex == 2);
+		bool lodChecked = this->chkCreateLODControlResource->Checked;
+		bool infoChecked = this->chkCreateInformationResource->Checked;
+		this->chkCreateLODControlResource->Enabled = supported;
+		this->chkCreateInformationResource->Enabled = supported;
+		this->numLODControlClampU->Enabled = supported && lodChecked;
+		this->numLODControlClampV->Enabled = supported && lodChecked;
+		this->txtInformationAuthor->Enabled = supported && infoChecked;
+		this->txtInformationComments->Enabled = supported && infoChecked;
+		this->txtInformationContact->Enabled = supported && infoChecked;
+		this->txtInformationDescription->Enabled = supported && infoChecked;
+		this->txtInformationModification->Enabled = supported && infoChecked;
+		this->txtInformationVersion->Enabled = supported && infoChecked;
+	}
+
+	private: System::Void chkCreateLODControlResource_EnabledChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->numLODControlClampU->Enabled = this->chkCreateLODControlResource->Enabled;
+		this->numLODControlClampV->Enabled = this->chkCreateLODControlResource->Enabled;
+	}
+
+	private: System::Void chkCreateInformationResource_EnabledChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->txtInformationAuthor->Enabled = this->chkCreateInformationResource->Enabled;
+		this->txtInformationComments->Enabled = this->chkCreateInformationResource->Enabled;
+		this->txtInformationContact->Enabled = this->chkCreateInformationResource->Enabled;
+		this->txtInformationDescription->Enabled = this->chkCreateInformationResource->Enabled;
+		this->txtInformationModification->Enabled = this->chkCreateInformationResource->Enabled;
+		this->txtInformationVersion->Enabled = this->chkCreateInformationResource->Enabled;
 	}
 };
 }
