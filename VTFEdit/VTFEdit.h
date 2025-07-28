@@ -673,7 +673,7 @@ namespace VTFEdit
 			// btnWarnings
 			// 
 			this->btnWarnings->Index = 0;
-			this->btnWarnings->Text = L"&Warnings";
+			this->btnWarnings->Text = L"&Warning Popups";
 			this->btnWarnings->Click += gcnew System::EventHandler(this, &CVTFEdit::btnWarnings_Click);
 			// 
 			// btnNotifSounds
@@ -2257,6 +2257,7 @@ namespace VTFEdit
 
 			delete []lpBuffer;
 
+			#pragma warning(disable:6001) // disable uninitialized memory warning
 			System::Drawing::Bitmap^ vtfImage = gcnew System::Drawing::Bitmap(uiScaledWidth, uiScaledHeight, uiScaledStride * 3, System::Drawing::Imaging::PixelFormat::Format24bppRgb, (System::IntPtr)this->ucImageData);
 
 			this->picVTFFileTL->Size = System::Drawing::Size(uiScaledWidth, uiScaledHeight);
@@ -2684,13 +2685,13 @@ namespace VTFEdit
 
 			if (!bResult)
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
-					MessageBox::Show(System::String::Concat("Error parsing VMT:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
+					MessageBox::Show(System::String::Concat("Error parsing VMT file:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
 
@@ -2888,12 +2889,12 @@ namespace VTFEdit
 				{
 					delete VTFFile;
 
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
 						MessageBox::Show(System::String::Concat("Error loading VTF texture:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
@@ -2912,13 +2913,13 @@ namespace VTFEdit
 					{
 						delete VMTFile;
 
-						if (bNotificationSounds)
-						{
-							System::Media::SystemSounds::Asterisk->Play();
-						}
 						if (bWarnings)
 						{
-							MessageBox::Show(System::String::Concat("Error loading VMT texture:\n\n", e->Message), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
+							if (bNotificationSounds)
+							{
+								System::Media::SystemSounds::Asterisk->Play();
+							}
+							MessageBox::Show(System::String::Concat("Error loading VMT file:\n\n", e->Message), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 						}
 						return;
 					}
@@ -2951,13 +2952,13 @@ namespace VTFEdit
 				{
 					delete VMTFile;
 
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
-						MessageBox::Show(System::String::Concat("Error loading VMT texture:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
+						MessageBox::Show(System::String::Concat("Error loading VMT file:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
 			}
@@ -3016,12 +3017,12 @@ namespace VTFEdit
 				}
 				else
 				{
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
 						MessageBox::Show(System::String::Concat("Error saving VTF texture:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
@@ -3044,13 +3045,13 @@ namespace VTFEdit
 				}
 				catch(Exception ^e)
 				{
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
-						MessageBox::Show(System::String::Concat("Error saving VMT texture:\n\n", e->Message), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
+						MessageBox::Show(System::String::Concat("Error saving VMT file:\n\n", e->Message), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
 			}
@@ -3129,34 +3130,34 @@ namespace VTFEdit
 								delete VTFFile;
 								VTFFile = 0;
 
-								if (bNotificationSounds)
-								{
-									System::Media::SystemSounds::Asterisk->Play();
-								}
 								if (bWarnings)
 								{
+									if (bNotificationSounds)
+									{
+										System::Media::SystemSounds::Asterisk->Play();
+									}
 									MessageBox::Show("Error loading image:\n\nAll frames and faces must be the same size.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 								}
 
 								break;
 							}
 						}
-
+						vlUInt val = uiWidth * uiHeight * 4;
 						// Copy the image data.
-						lpImageData[i] = new vlByte[uiWidth * uiHeight * 4];
-						memcpy(lpImageData[i], ilGetData(), uiWidth * uiHeight * 4);
+						lpImageData[i] = new vlByte[val];
+						memcpy(lpImageData[i], ilGetData(), val);
 					}
 					else
 					{
 						delete VTFFile;
 						VTFFile = 0;
 
-						if (bNotificationSounds)
-						{
-							System::Media::SystemSounds::Asterisk->Play();
-						}
 						if (bWarnings)
 						{
+							if (bNotificationSounds)
+							{
+								System::Media::SystemSounds::Asterisk->Play();
+							}
 							MessageBox::Show("Error converting image.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 						}
 						break;
@@ -3167,12 +3168,12 @@ namespace VTFEdit
 					delete VTFFile;
 					VTFFile = 0;
 
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
 						MessageBox::Show("Error loading image.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 
@@ -3194,7 +3195,7 @@ namespace VTFEdit
 				// Create the .vtf file.
 				if(VTFFile->Create(uiWidth, uiHeight, uiFrames, uiFaces, uiSlices, lpImageData, VTFCreateOptions) != vlFalse && CVTFFileUtility::CreateResources(Options, VTFFile))
 				{
-					for (vlUInt i = 0, j = 0x00000001; i < (vlUInt)this->Options->lstFlags->Items->Count; i++, j <<= 1)
+					for (vlUInt i = 0; i < (vlUInt)this->Options->lstFlags->Items->Count; i++)
 					{
 						if (this->Options->lstFlags->GetItemChecked(i))
 						{
@@ -3258,12 +3259,12 @@ namespace VTFEdit
 				{
 					delete VTFFile;
 
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
 						MessageBox::Show(System::String::Concat("Error creating VTF texture:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
@@ -3307,12 +3308,12 @@ namespace VTFEdit
 
 			if(!(ilTexImage(uiWidth, uiHeight, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, lpImageData) && ilSaveImage(cPath)))
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
 					MessageBox::Show("Error saving image.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
@@ -3373,12 +3374,12 @@ namespace VTFEdit
 						sprintf(cInsert, "_%.2u_%.2u_%.2u%s", i, j, k, cExt);
 						if(!(ilTexImage(uiWidth, uiHeight, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, lpImageData) && ilSaveImage(cPath)))
 						{
-							if (bNotificationSounds)
-							{
-								System::Media::SystemSounds::Asterisk->Play();
-							}
 							if (bWarnings)
 							{
+								if (bNotificationSounds)
+								{
+									System::Media::SystemSounds::Asterisk->Play();
+								}
 								MessageBox::Show("Error saving image.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 							}
 						}
@@ -3521,12 +3522,12 @@ namespace VTFEdit
 			}
 			else
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
 					MessageBox::Show("Operation not supported.\n\nVTFEdit has determined that the current thread apartment state does not\nsupport this operation. This is a .NET design flaw.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
@@ -3607,12 +3608,12 @@ namespace VTFEdit
 				{
 					delete VTFFile;
 
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
 						MessageBox::Show(System::String::Concat("Error creating VTF texture:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
@@ -3621,12 +3622,12 @@ namespace VTFEdit
 			}
 			else
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
 					MessageBox::Show("Operation not supported.\n\nVTFEdit has determined that the current thread apartment state does not\nsupport this operation. This is a .NET design flaw.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
@@ -3722,7 +3723,7 @@ namespace VTFEdit
 			if(this->VTFFile == 0)
 				return;
 
-			// Flags you shouldn't be allowed to change as they're set when created by VTEX.
+			// Flags you shouldn't be allowed to change as they're set when created.
 			if( e->Index == 12 || 
 				e->Index == 13 || 
 				e->Index == 19 || 
@@ -3888,12 +3889,12 @@ namespace VTFEdit
 			}
 			else
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
 					MessageBox::Show(System::String::Concat("Error validating VMT:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
@@ -4644,12 +4645,12 @@ namespace VTFEdit
 			}
 			else
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
 					MessageBox::Show("Operation not supported.\n\nVTFEdit has determined that the current thread apartment state does not\nsupport this operation. This is a .NET design flaw.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
@@ -4728,12 +4729,12 @@ namespace VTFEdit
 				{
 					delete VTFFile;
 
-					if (bNotificationSounds)
-					{
-						System::Media::SystemSounds::Asterisk->Play();
-					}
 					if (bWarnings)
 					{
+						if (bNotificationSounds)
+						{
+							System::Media::SystemSounds::Asterisk->Play();
+						}
 						MessageBox::Show(System::String::Concat("Error creating VTF texture:\n\n", gcnew System::String(vlGetLastError())), Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 					}
 				}
@@ -4742,12 +4743,12 @@ namespace VTFEdit
 			}
 			else
 			{
-				if (bNotificationSounds)
-				{
-					System::Media::SystemSounds::Asterisk->Play();
-				}
 				if (bWarnings)
 				{
+					if (bNotificationSounds)
+					{
+						System::Media::SystemSounds::Asterisk->Play();
+					}
 					MessageBox::Show("Operation not supported.\n\nVTFEdit has determined that the current thread apartment state does not\nsupport this operation. This is a .NET design flaw.", Application::ProductName, MessageBoxButtons::OK, MessageBoxIcon::Error);
 				}
 			}
@@ -5026,27 +5027,13 @@ namespace VTFEdit
 		}
 
 		private: System::Void btnWarnings_Click(System::Object^ sender, System::EventArgs^ e) {
-			if (!this->btnWarnings->Checked)
-			{
-				this->btnWarnings->Checked = true;
-				this->bWarnings = true;
-			}
-			else {
-				this->btnWarnings->Checked = false;
-				this->bWarnings = false;
-			}
+			this->btnWarnings->Checked = !this->btnWarnings->Checked;
+			this->bWarnings = this->btnWarnings->Checked;
 		}
 
 		private: System::Void btnNotifSounds_Click(System::Object^ sender, System::EventArgs^ e) {
-			if (!this->btnNotifSounds->Checked)
-			{
-				this->btnNotifSounds->Checked = true;
-				this->bNotificationSounds = true;
-			}
-			else {
-				this->btnNotifSounds->Checked = false;
-				this->bNotificationSounds = false;
-			}
+			this->btnNotifSounds->Checked = !this->btnNotifSounds->Checked;
+			this->bNotificationSounds = this->btnNotifSounds->Checked;
 		}
 };
 }

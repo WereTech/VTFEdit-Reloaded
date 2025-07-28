@@ -1707,15 +1707,17 @@ namespace VTFEdit
 
 	private: System::Void cboFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
 		// Check both formats for I8 or IA88
-		this->numLuminanceWeightsR->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
-		this->numLuminanceWeightsG->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
-		this->numLuminanceWeightsB->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		bool supported = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		this->numLuminanceWeightsR->Enabled = supported;
+		this->numLuminanceWeightsG->Enabled = supported;
+		this->numLuminanceWeightsB->Enabled = supported;
 	}
 
 	private: System::Void cboAlphaFormat_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
-		this->numLuminanceWeightsR->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
-		this->numLuminanceWeightsG->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
-		this->numLuminanceWeightsB->Enabled = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		bool supported = (this->cboFormat->SelectedIndex == 5 || this->cboFormat->SelectedIndex == 6 || this->cboAlphaFormat->SelectedIndex == 5 || this->cboAlphaFormat->SelectedIndex == 6);
+		this->numLuminanceWeightsR->Enabled = supported;
+		this->numLuminanceWeightsG->Enabled = supported;
+		this->numLuminanceWeightsB->Enabled = supported;
 	}
 
 	private: System::Void cboVersion_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
