@@ -3113,8 +3113,6 @@ namespace VTFEdit
 				// Load the image and convert it to RGBA.
 				if(ilLoadImage(cPath))
 				{
-					bHasAlpha |= ilGetInteger(IL_IMAGE_FORMAT) == IL_RGBA || ilGetInteger(IL_IMAGE_FORMAT) == IL_BGRA || ilGetInteger(IL_IMAGE_FORMAT) == IL_LUMINANCE_ALPHA;
-
 					if(ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
 					{
 						// Get the size of the image and make sure it matches the other images.
@@ -3146,6 +3144,23 @@ namespace VTFEdit
 						// Copy the image data.
 						lpImageData[i] = new vlByte[val];
 						memcpy(lpImageData[i], ilGetData(), val);
+						
+						// Only check for alpha when bHasAlpha is false. This is to allow for checking through multiple images for transparency
+						// and to not unnecessarily check for alpha when it was already detected, which would be pointless.
+						if ( !bHasAlpha ) {
+							DWORD uiStride = (uiWidth + 3) / 4 * 4;
+							System::Drawing::Bitmap^ vtfImage = gcnew System::Drawing::Bitmap(uiWidth, uiHeight, uiStride * 3,	System::Drawing::Imaging::PixelFormat::Format32bppArgb, (System::IntPtr)lpImageData[i]);
+
+							// Iterate all pixels in the image and check if any of them are lower than 255 ( is not fully opaque )
+							for ( vlUInt j = 0; j < uiWidth; j++ ) {
+								for ( vlUInt k = 0; k < uiHeight; k++ ) {
+									if ( vtfImage->GetPixel( j, k ).A < 255 ) {
+										bHasAlpha = true;
+										break;
+									}
+								}
+							}
+						}
 					}
 					else
 					{
