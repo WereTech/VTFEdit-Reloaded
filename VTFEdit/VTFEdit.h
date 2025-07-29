@@ -2638,7 +2638,6 @@ private: System::Windows::Forms::MenuItem ^btnOptions;
 				else if (this->VTFFile->GetWidth() >= 8 || this->VTFFile->GetHeight() >= 8) { this->fImageScale = 32.0f; }
 				else if (this->VTFFile->GetWidth() >= 4 || this->VTFFile->GetHeight() >= 4) { this->fImageScale = 64.0f; }
 				else if (this->VTFFile->GetWidth() >= 2 || this->VTFFile->GetHeight() >= 2) { this->fImageScale = 128.0f; }
-				else if (this->VTFFile->GetWidth() >= 1 || this->VTFFile->GetHeight() >= 1) { this->fImageScale = 256.0f; }
 			}
 			else {
 				if (this->VTFFile->GetWidth() >= 4096 || this->VTFFile->GetHeight() >= 4096) { this->fImageScale = 0.125f; }
@@ -2653,7 +2652,6 @@ private: System::Windows::Forms::MenuItem ^btnOptions;
 				else if (this->VTFFile->GetWidth() >= 8 || this->VTFFile->GetHeight() >= 8) { this->fImageScale = 64.0f; }
 				else if (this->VTFFile->GetWidth() >= 4 || this->VTFFile->GetHeight() >= 4) { this->fImageScale = 128.0f; }
 				else if (this->VTFFile->GetWidth() >= 2 || this->VTFFile->GetHeight() >= 2) { this->fImageScale = 256.0f; }
-				else if (this->VTFFile->GetWidth() >= 1 || this->VTFFile->GetHeight() >= 1) { this->fImageScale = 512.0f; }
 			}
 		}
 

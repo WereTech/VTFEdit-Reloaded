@@ -789,23 +789,25 @@ vlBool CVTFFile::IsPowerOfTwo(vlUInt uiSize)
 
 vlBool CVTFFile::IsMultipleOfFour(vlUInt uiSize)
 {
-	return uiSize > 0 && uiSize % 4 == 0;
+	return uiSize >= 4 && ( uiSize % 4 == 0 );
 }
 
 vlUInt CVTFFile::NearestMultipleOfFour(vlUInt uiSize)
 {
-	if (uiSize == 0)
+	if (uiSize < 4)
 	{
-		return 1;
+		return 4;
 	}
 
 	if (this->IsMultipleOfFour(uiSize))
 	{
 		return uiSize;
 	}
-
-	vlUInt uiSizeMod = uiSize % 4;
-	return (0 < uiSizeMod < 3) ? uiSize - uiSizeMod : uiSize + 1;
+	else
+	{
+		vlUInt uiSizeMod = uiSize % 4;
+		return uiSizeMod < 3 ? uiSize - uiSizeMod : uiSize + 1;
+	}
 }
 
 vlUInt CVTFFile::NextPowerOfTwo(vlUInt uiSize)
