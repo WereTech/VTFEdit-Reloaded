@@ -1,6 +1,6 @@
 # VTFLib - A Valve VTF and VMT image format programming library.
 
-VTFLib is a LGPL open source programming library that provides a C and C++ API that, with a few simple functions, can open and save .vtf and .vmt files, providing access to all known features. The library functions independent of Steam, allowing third party applications to use the library without Steam present or runningi on the target system.
+VTFLib is a LGPL open source programming library that provides a C and C++ API that, with a few simple functions, can open and save .vtf and .vmt files, providing access to all known features. The library functions independent of Steam, allowing third party applications to use the library without Steam present or running on the target system.
 
 VTFLib includes two GPL example applications, VTFCmd and VTFEdit. VTFCmd is a C command line frontend for VTFLib that can create .vtf and .vmt files from various source formats. It is similar in functionality to Valve's vtex Source SDK utility, but offers a lot more control. VTFEdit is a C++ .NET graphical frontend for VTFLib with viewing and creation capabilities. Both VTFCmd and VTFEdit support several source image formats, including, but not limited to .bmp, .dds, .gif, .jpg, .png and .tga.
 
@@ -46,17 +46,16 @@ DevIL.dll from this zip (This may be changed if the project has a working 32 bit
 #
 
 ## VTFCmd Usage
-
+Parameters:
 ```
-Correct vtfcmd usage:
  -file <path>             (Input file path.)
  -folder <path>           (Input directory search string.)
  -output <path>           (Output directory.)
  -prefix <string>         (Output file prefix.)
  -postfix <string>        (Output file postfix.)
- -version <string>        (Ouput version.)
- -format <string>         (Ouput format to use on non-alpha textures.)
- -alphaformat <string>    (Ouput format to use on alpha textures.)
+ -version <string>        (Output version.)
+ -format <string>         (Output format to use on non-alpha textures.)
+ -alphaformat <string>    (Output format to use on alpha textures.)
  -flag <string>           (Output flags to set.)
  -resize                  (Resize the input to a power of 2.)
  -rmethod <string>        (Resize method to use.)
@@ -80,14 +79,15 @@ Correct vtfcmd usage:
  -silent                  (Silent mode.)
  -pause                   (Pause when done.)
  -help                    (Display vtfcmd help.)
-
+```
 Example vtfcmd usage:
+```
 vtfcmd.exe -file "C:\texture1.bmp" -file "C:\texture2.bmp" -format "dxt1"
 vtfcmd.exe -folder "C:\input\*.tga" -output "C:\output" -recurse -pause
 vtfcmd.exe -folder "C:\output\*.vtf" -output "C:\input" -exportformat "jpg"
 ```
-
 ## VTFEdit Reloaded Changelog
+<details>
 
   v2.0.4
   - Changed the UI to use a better version of the tool bar and added more buttons for ease of access.
@@ -128,7 +128,7 @@ vtfcmd.exe -folder "C:\output\*.vtf" -output "C:\input" -exportformat "jpg"
     - Previously they were doing integer maths on what should be floats
     - Replaced overly complex controls with a simple exposure slider
     - Very simple Reinhard tonemapper for previewing exposure
-
+</details>
 
 ## Program Copyright-Permissions
 
