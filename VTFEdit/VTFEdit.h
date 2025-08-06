@@ -3741,6 +3741,7 @@ private: System::Windows::Forms::MenuItem ^btnOptions;
 			if(!this->bHDRReseting)
 			{
 				this->UpdateVTFFile();
+				this->UpdateVTFView();
 			}
 		}
 
@@ -4144,6 +4145,8 @@ private: System::Windows::Forms::MenuItem ^btnOptions;
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.LuminanceWeightG = ", this->Options->LuminanceWeightG.ToString()));
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.LuminanceWeightB = ", this->Options->LuminanceWeightB.ToString()));
 
+				ConfigFile->WriteLine(System::String::Concat("VTFOptions.AlphaThreshold = ", this->Options->AlphaThreshold.ToString()));
+
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.CreateLODControlResource = ", this->Options->CreateLODControlResource.ToString()));
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.LODControlClampU = ", this->Options->LODControlClampU.ToString()));
 				ConfigFile->WriteLine(System::String::Concat("VTFOptions.LODControlClampV = ", this->Options->LODControlClampV.ToString()));
@@ -4431,6 +4434,11 @@ private: System::Windows::Forms::MenuItem ^btnOptions;
 						else if(System::String::Compare(sArg, "VTFOptions.LuminanceWeightB", true) == 0)
 						{
 							this->Options->LuminanceWeightB = Convert::ToSingle(sVal);
+						}
+
+						else if(System::String::Compare(sArg, "VTFOptions.AlphaThreshold", true) == 0)
+						{
+							this->Options->AlphaThreshold = Convert::ToInt16(sVal);
 						}
 
 						else if(System::String::Compare(sArg, "VTFOptions.CreateLODControlResource", true) == 0)

@@ -89,6 +89,8 @@ typedef struct tagSVTFCreateOptions
 
 	vlBool bSphereMap;									//!< Generate a sphere map for six faced environment maps.
 	vlBool bSRGB;										//!< Texture is in the SRGB color space.
+
+	vlUInt nAlphaThreshold;								//!< Alpha threshold for One Bit Alpha. Pixel alpha below this value is set to 0.
 } SVTFCreateOptions;
 #pragma pack()
 
@@ -643,7 +645,7 @@ namespace VTFLib
 			\param DestFormat is the image format you wish to convert to.
 			\return true on sucessful conversion, otherwise false.
 		*/
-		static vlBool ConvertFromRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat);
+		static vlBool ConvertFromRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat, vlUInt nAlphaThreshold = 0);
 
 		//! Convert an image from any format to any format.
 		/*!
@@ -657,7 +659,7 @@ namespace VTFLib
 			\param DestFormat is the image format you wish to convert to.
 			\return true on sucessful conversion, otherwise false.
 		*/
-		static vlBool Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat, VTFImageFormat DestFormat);
+		static vlBool Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat, VTFImageFormat DestFormat, vlUInt nAlphaThreshold = 0);
 
 		//! Re-sizes an image.
 		/*!
@@ -681,7 +683,7 @@ namespace VTFLib
 		static vlBool DecompressDXTn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat);
 
 		// DXTn format compression function
-		static vlBool CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat);
+		static vlBool CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat, vlUInt nAlphaThreshold);
 
 	public:
 

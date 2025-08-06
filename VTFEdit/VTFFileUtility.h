@@ -64,6 +64,7 @@ namespace VTFEdit
 			VTFCreateOptions.bReflectivity = Options->ComputeReflectivity;
 			VTFCreateOptions.bSphereMap = Options->GenerateSphereMap;
 			VTFCreateOptions.bSRGB = Options->sRGB;
+			VTFCreateOptions.nAlphaThreshold = Options->AlphaThreshold;
 
 			vlSetFloat(VTFLIB_LUMINANCE_WEIGHT_R, Options->LuminanceWeightR);
 			vlSetFloat(VTFLIB_LUMINANCE_WEIGHT_G, Options->LuminanceWeightG);
@@ -137,7 +138,7 @@ namespace VTFEdit
 				}
 
 				vlUInt uiSize = 0;
-				vlByte lpBuffer[65536];
+				vlByte lpBuffer[65536]{};
 				if(pVMTFile->Save(lpBuffer, sizeof(lpBuffer), uiSize))
 				{
 					bResult &= pVTFFile->SetResourceData(VTF_RSRC_KEY_VALUE_DATA, uiSize, lpBuffer) != vlFalse;

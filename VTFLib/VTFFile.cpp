@@ -346,6 +346,10 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 	// Generate image.
 	//
 
+	// DXT1 One Bit is apparently broken... Use DXT1 with One Bit Alpha flag enabled instead.
+	if ( this->Header->ImageFormat == IMAGE_FORMAT_DXT1_ONEBITALPHA )
+		this->Header->ImageFormat = IMAGE_FORMAT_DXT1;
+	
 	this->uiImageBufferSize = this->ComputeImageSize(this->Header->Width, this->Header->Height, this->Header->Depth, this->Header->MipCount, this->Header->ImageFormat) * uiFrames * uiFaces;
 	this->lpImageData = new vlByte[this->uiImageBufferSize];
 
@@ -632,7 +636,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 					{
 						vlByte* pSource = lpImageDataRGBA8888[i + j + k];
 
-						if(!this->ConvertFromRGBA8888(pSource, this->GetData(i, j, k, 0), this->Header->Width, this->Header->Height, this->Header->ImageFormat))
+						if(!this->ConvertFromRGBA8888(pSource, this->GetData(i, j, k, 0), this->Header->Width, this->Header->Height, this->Header->ImageFormat, VTFCreateOptions.nAlphaThreshold))
 						{
 							throw 0;
 						}
@@ -650,7 +654,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 								throw 0;
 							}
 
-							if (!this->ConvertFromRGBA8888(temp.data(), this->GetData(i, j, k, m), usWidth, usHeight, this->Header->ImageFormat))
+							if (!this->ConvertFromRGBA8888(temp.data(), this->GetData(i, j, k, m), usWidth, usHeight, this->Header->ImageFormat, VTFCreateOptions.nAlphaThreshold))
 							{
 								throw 0;
 							}
@@ -667,7 +671,7 @@ vlBool CVTFFile::Create(vlUInt uiWidth, vlUInt uiHeight, vlUInt uiFrames, vlUInt
 				{
 					for(vlUInt k = 0; k < uiSlices; k++)
 					{
-						if(!this->ConvertFromRGBA8888(lpImageDataRGBA8888[i + j + k], this->GetData(i, j, k, 0), this->Header->Width, this->Header->Height, this->Header->ImageFormat))
+						if(!this->ConvertFromRGBA8888(lpImageDataRGBA8888[i + j + k], this->GetData(i, j, k, 0), this->Header->Width, this->Header->Height, this->Header->ImageFormat, VTFCreateOptions.nAlphaThreshold))
 						{
 							throw 0;
 						}
@@ -845,22 +849,26 @@ vlBool CVTFFile::IsLoaded() const
 
 vlBool CVTFFile::Load(const vlChar *cFileName, vlBool bHeaderOnly)
 {
-	return this->Load(&IO::Readers::CFileReader(cFileName), bHeaderOnly);
+	auto cfr = IO::Readers::CFileReader(cFileName);
+	return this->Load(&cfr, bHeaderOnly);
 }
 
 vlBool CVTFFile::Load(const vlVoid *lpData, vlUInt uiBufferSize, vlBool bHeaderOnly)
 {
-	return this->Load(&IO::Readers::CMemoryReader(lpData, uiBufferSize), bHeaderOnly);
+	auto cmr = IO::Readers::CMemoryReader(lpData, uiBufferSize);
+	return this->Load(&cmr, bHeaderOnly);
 }
 
 vlBool CVTFFile::Load(vlVoid *pUserData, vlBool bHeaderOnly)
 {
-	return this->Load(&IO::Readers::CProcReader(pUserData), bHeaderOnly);
+	auto cpr = IO::Readers::CProcReader(pUserData);
+	return this->Load(&cpr, bHeaderOnly);
 }
 
 vlBool CVTFFile::Save(const vlChar *cFileName) const
 {
-	return this->Save(&IO::Writers::CFileWriter(cFileName));
+	auto cfw = IO::Writers::CFileWriter(cFileName);
+	return this->Save(&cfw);
 }
 
 vlBool CVTFFile::Save(vlVoid *lpData, vlUInt uiBufferSize, vlUInt &uiSize) const
@@ -878,7 +886,8 @@ vlBool CVTFFile::Save(vlVoid *lpData, vlUInt uiBufferSize, vlUInt &uiSize) const
 
 vlBool CVTFFile::Save(vlVoid *pUserData) const
 {
-	return this->Save(&IO::Writers::CProcWriter(pUserData));
+	auto cpw = IO::Writers::CProcWriter(pUserData);
+	return this->Save(&cpw);
 }
 
 // -----------------------------------------------------------------------------------
@@ -2364,8 +2373,8 @@ vlBool CVTFFile::GenerateSphereMap()
 	vlUInt samples = 4;							// pixel samples for rendering
 
 	vlUInt i, j, x, y, f;
-	NColour c, texel, average;
-	Vector v, r, p;
+	NColour c{}, texel{}, average{};
+	Vector v{}, r{}, p{};
 	vlSingle s, t, temp, k;
 	 
 	// load the faces into the buffers and convert as needed
@@ -2891,7 +2900,7 @@ vlBool CVTFFile::DecompressDXTn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt
 	options.dwSize        = sizeof(options);
 	options.fquality      = 1.0f;
 	options.dwnumThreads  = 0;
-	options.bDXT1UseAlpha = false;
+	options.bDXT1UseAlpha = SourceFormat == ( IMAGE_FORMAT_DXT1_ONEBITALPHA | IMAGE_FORMAT_DXT1 );
 
 	CMP_Texture destTexture = {0};
 	destTexture.dwSize     = sizeof( destTexture );
@@ -2916,9 +2925,9 @@ vlBool CVTFFile::DecompressDXTn(vlByte *src, vlByte *dst, vlUInt uiWidth, vlUInt
 // ConvertFromRGBA8888()
 // Convert input image data (lpSource) to output image data (lpDest) of format DestFormat.
 //
-vlBool CVTFFile::ConvertFromRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat)
+vlBool CVTFFile::ConvertFromRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat, vlUInt nAlphaThreshold)
 {
-	return CVTFFile::Convert(lpSource, lpDest, uiWidth, uiHeight, IMAGE_FORMAT_RGBA8888, DestFormat);
+	return CVTFFile::Convert(lpSource, lpDest, uiWidth, uiHeight, IMAGE_FORMAT_RGBA8888, DestFormat, nAlphaThreshold);
 }
 
 //
@@ -2926,7 +2935,7 @@ vlBool CVTFFile::ConvertFromRGBA8888(vlByte *lpSource, vlByte *lpDest, vlUInt ui
 // Compress input image data (lpSource) to output image data (lpDest) of format DestFormat
 // where DestFormat is of format DXTn.  Uses NVidia DXT library.
 //
-vlBool CVTFFile::CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat)
+vlBool CVTFFile::CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat DestFormat, vlUInt nAlphaThreshold = 0)
 {
 	CMP_Texture srcTexture = {0};
 	srcTexture.dwSize     = sizeof( srcTexture );
@@ -2941,7 +2950,13 @@ vlBool CVTFFile::CompressDXTn(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, 
 	options.dwSize        = sizeof(options);
 	options.fquality      = 1.0f;
 	options.dwnumThreads  = 0;
-	options.bDXT1UseAlpha = DestFormat == IMAGE_FORMAT_DXT1_ONEBITALPHA;
+	if ( DestFormat == IMAGE_FORMAT_DXT1 || DestFormat == IMAGE_FORMAT_DXT1_ONEBITALPHA ) {
+		options.bDXT1UseAlpha = true;
+	}
+	else {
+		options.bDXT1UseAlpha = false;
+	}
+	options.nAlphaThreshold = nAlphaThreshold;
 
 	CMP_Texture destTexture = {0};
 	destTexture.dwSize     = sizeof( destTexture );
@@ -3397,7 +3412,7 @@ vlBool ConvertTemplated(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt
 	return vlTrue;
 }
 
-vlBool CVTFFile::Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat, VTFImageFormat DestFormat)
+vlBool CVTFFile::Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUInt uiHeight, VTFImageFormat SourceFormat, VTFImageFormat DestFormat, vlUInt nAlphaThreshold)
 {
 	assert(lpSource != 0);
 	assert(lpDest != 0);
@@ -3484,7 +3499,7 @@ vlBool CVTFFile::Convert(vlByte *lpSource, vlByte *lpDest, vlUInt uiWidth, vlUIn
 			case IMAGE_FORMAT_DXT1_ONEBITALPHA:
 			case IMAGE_FORMAT_DXT3:
 			case IMAGE_FORMAT_DXT5:
-				bResult = CVTFFile::CompressDXTn(lpSourceRGBA, lpDest, uiWidth, uiHeight, DestFormat);
+				bResult = CVTFFile::CompressDXTn(lpSourceRGBA, lpDest, uiWidth, uiHeight, DestFormat, nAlphaThreshold);
 				break;
 			default:
 				bResult = CVTFFile::Convert(lpSourceRGBA, lpDest, uiWidth, uiHeight, IMAGE_FORMAT_RGBA8888, DestFormat);
@@ -3580,7 +3595,7 @@ vlVoid CVTFFile::CorrectImageGamma(vlByte *lpImageDataRGBA8888, vlUInt uiWidth, 
 		return;
 	}
 
-	vlByte bTable[256];
+	vlByte bTable[256]{};
 
 	sGammaCorrection = 1.0f / sGammaCorrection;
 
@@ -3609,7 +3624,7 @@ vlVoid CVTFFile::ComputeImageReflectivity(vlByte *lpImageDataRGBA8888, vlUInt ui
 {
 	sX = sY = sZ = 0.0f;
 
-	vlSingle sTable[256];
+	vlSingle sTable[256]{};
 
 	//
 	// Precalculate all possible reflectivity values.
