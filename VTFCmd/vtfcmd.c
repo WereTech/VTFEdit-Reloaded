@@ -707,7 +707,7 @@ void PrintUsage(const vlChar *lpError, ...)
 	Print(" -exportformat <string>    (Convert VTF files to the format of this extension.)\n");
 	Print(" -silent                   (Silent mode.)\n");
 	Print(" -pause                    (Pause when done.)\n");
-	Print(" -hdr	                  (Indicate input is hdr.)\n");
+	Print(" -hdr                      (Indicate input is hdr.)\n");
 	Print(" -help                     (Display vtfcmd help.)\n");
 	Print("\n");
 	Print("Example vtfcmd usage:\n");

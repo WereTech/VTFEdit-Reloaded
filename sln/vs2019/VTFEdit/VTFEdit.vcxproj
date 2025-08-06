@@ -114,7 +114,6 @@ copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)VTFLib\$(Platform)\$(Configuration)\VTFLib.dll" "$(TargetDir)"
 copy "$(SolutionDir)..\..\thirdparty\bin\DevIL.dll" "$(TargetDir)"
-copy "$(SolutionDir)..\..\thirdparty\bin\HLLib.dll" "$(TargetDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
