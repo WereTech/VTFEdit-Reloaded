@@ -645,6 +645,7 @@ namespace VTFEdit
 				for(int j = 0; j < Files->Length; j++)
 				{
 					bool bIsVTF = String::Compare(Files[j]->Extension, ".vtf", true) == 0;
+					bool bHasAlpha = false;
 
 					this->Log(String::Concat("Processing ", Files[j]->Name, "..."), System::Drawing::Color::Gray);
 
@@ -659,13 +660,35 @@ namespace VTFEdit
 						// Load the image and convert it to RGBA.
 						if(ilLoadImage(cFile))
 						{
-							bool bHasAlpha = ilGetInteger(IL_IMAGE_FORMAT) == IL_RGBA || ilGetInteger(IL_IMAGE_FORMAT) == IL_BGRA || ilGetInteger(IL_IMAGE_FORMAT) == IL_LUMINANCE_ALPHA;
-
 							if(ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
 							{
+								vlUInt uiWidth = (vlUInt)ilGetInteger(IL_IMAGE_WIDTH);
+								vlUInt uiHeight = (vlUInt)ilGetInteger(IL_IMAGE_HEIGHT);
+								vlUInt val = uiWidth * uiHeight * 4;
+								// Copy the image data.
+								vlByte *lpImageData = new vlByte[val];
+								memcpy(lpImageData, ilGetData(), val);
+
+								// Only check for alpha when bHasAlpha is false. This is to allow for checking through multiple images for transparency
+								// and to not unnecessarily check for alpha when it was already detected, which would be pointless.
+								if ( !bHasAlpha ) {
+									DWORD uiStride = (uiWidth + 3) / 4 * 4;
+									System::Drawing::Bitmap^ vtfImage = gcnew System::Drawing::Bitmap(uiWidth, uiHeight, uiStride * 3,	System::Drawing::Imaging::PixelFormat::Format32bppArgb, (System::IntPtr)lpImageData);
+
+									// Iterate all pixels in the image and check if any of them are lower than 255 ( is not fully opaque )
+									for ( vlUInt j = 0; j < uiWidth; j++ ) {
+										for ( vlUInt k = 0; k < uiHeight; k++ ) {
+											if ( vtfImage->GetPixel( j, k ).A < 255 ) {
+												bHasAlpha = true;
+												break;
+											}
+										}
+									}
+								}
+								
 								VTFCreateOptions.ImageFormat = bHasAlpha ? Options->AlphaFormat : Options->NormalFormat;
 
-								if(VTFFile.Create((vlUInt)ilGetInteger(IL_IMAGE_WIDTH), (vlUInt)ilGetInteger(IL_IMAGE_HEIGHT), ilGetData(), VTFCreateOptions) != vlFalse)
+								if(VTFFile.Create(uiWidth, uiHeight, lpImageData, VTFCreateOptions) != vlFalse)
 								{
 									if (VTFFile.GetMinorVersion() >= 3)
 									{
