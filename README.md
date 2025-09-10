@@ -1,3 +1,5 @@
+Archived for previous releases. Further updates will happen in https://github.com/Sky-rym/VTFEdit-Reloaded
+
 # VTFLib - A Valve VTF and VMT image format programming library.
 
 VTFLib is a LGPL open source programming library that provides a C and C++ API that, with a few simple functions, can open and save .vtf and .vmt files, providing access to all known features. The library functions independent of Steam, allowing third party applications to use the library without Steam present or running on the target system.
